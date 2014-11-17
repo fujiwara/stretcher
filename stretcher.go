@@ -18,6 +18,8 @@ var (
 )
 
 func Run() {
+	log.Println("Starting up stretcher agent")
+
 	if file := os.Getenv("AWS_CONFIG_FILE"); file != "" {
 		err := LoadAWSConfigFile(file)
 		if err != nil {
@@ -25,6 +27,8 @@ func Run() {
 			return
 		}
 	}
+
+	log.Println("Waiting for consul events from STDIN...")
 
 	ev, err := ParseConsulEvents(os.Stdin)
 	if err != nil {
