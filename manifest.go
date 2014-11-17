@@ -72,6 +72,8 @@ func (m *Manifest) Deploy() error {
 	if err != nil {
 		return fmt.Errorf("Get src failed:", err)
 	}
+	defer src.Close()
+
 	tmp, err := ioutil.TempFile(os.TempDir(), "stretcher")
 	if err != nil {
 		return err
@@ -79,10 +81,10 @@ func (m *Manifest) Deploy() error {
 	defer os.Remove(tmp.Name())
 
 	written, sum, err := m.copyAndCalcHash(tmp, src)
+	tmp.Close()
 	if err != nil {
 		return err
 	}
-	tmp.Close()
 	log.Printf("Wrote %d bytes to %s", written, tmp.Name())
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
 		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
@@ -129,7 +131,10 @@ func (m *Manifest) Deploy() error {
 	}
 	fmt.Println(string(out))
 
-	os.Chdir(cwd)
+	if err = os.Chdir(cwd); err != nil {
+		return err
+	}
+
 	err = m.InvokePostDeployCommands()
 	if err != nil {
 		return err
