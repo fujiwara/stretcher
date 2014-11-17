@@ -97,7 +97,7 @@ func getURL(urlStr string) (io.ReadCloser, error) {
 	case "file":
 		return getFile(u)
 	default:
-		return nil, fmt.Errorf("manifest URL scheme must be s3 or http(s) or file", urlStr)
+		return nil, fmt.Errorf("manifest URL scheme must be s3 or http(s) or file: %s", urlStr)
 	}
 }
 
