@@ -33,6 +33,8 @@ $ consul watch -type event -name deploy /path/to/stretcher
 
 ### deployment process
 
+#### preparing
+
 1. Create tar(or tar.gz) archive for deployment.
 2. Upload the archive file to remote server (S3 or HTTP(S)).
 3. Create a manifest file (YAML) and upload it to remote server.
@@ -42,9 +44,22 @@ $ consul watch -type event -name deploy /path/to/stretcher
   * `commands`:
     * `pre`: commands to be executed at before the archive extracted.
     * `post`: commands to be executed at after the archive extracted.
-4. Create a consul event.
+
+#### executing
+
+1. Create a consul event.
 ```
 $ consul event -name deploy s3://example.com/deploy-20141117-112233.yml
 ```
   * `-name`: same as stretcher agent event name.
   * payload: manifest URL.
+
+2. (agent)
+  1. Fetching event from `consul watch`.
+  2. Get manifest URL.
+  3. Get src URL and store to tmporary directory (by `os.TempDir()`) and Check `checksum`.
+  4. Invoke `Pre` commands.
+  5. Extract src archive to temporary directory.
+  6. Sync files from extracted archive to `dest` directory
+    * by `rsync -a --delete`
+  7. Invoke `Post` commands.
