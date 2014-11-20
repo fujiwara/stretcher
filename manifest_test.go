@@ -1,10 +1,11 @@
 package stretcher_test
 
 import (
-	"testing"
+	"fmt"
 	"github.com/fujiwara/stretcher"
-	"os"
 	"io/ioutil"
+	"os"
+	"testing"
 )
 
 func TestParseManifest(t *testing.T) {
@@ -37,9 +38,8 @@ commands:
 	}
 }
 
-
 func TestDeployManifest(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_test")
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
@@ -47,10 +47,17 @@ func TestDeployManifest(t *testing.T) {
 	defer os.Remove("test/tmp/pre.touch")
 	defer os.Remove("test/tmp/post.touch")
 
+	// touch pid file (must not be deleted)
+	ioutil.WriteFile(
+		testDest+"/test.pid",
+		[]byte(fmt.Sprintf("%d", os.Getpid())),
+		0644,
+	)
+
 	cwd, _ := os.Getwd()
 	yml := `
 src: file://` + cwd + `/test/test.tar
-checksum: 7e3e9491ca2d825ffa3a0f78acea3a971392bc9d
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 commands:
   pre:
@@ -80,5 +87,90 @@ commands:
 	if _, err := os.Open("test/tmp/post.touch"); err != nil {
 		t.Error(err)
 	}
+	_, err = os.Open(testDest + "/test.pid")
+	if err == nil {
+		t.Error("test.pid must be removed")
+	}
 }
 
+func TestDeployManifestExclude(t *testing.T) {
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	testDest := _testDest.Name()
+	os.Remove(testDest)
+	os.Mkdir(testDest, 0755)
+	defer os.RemoveAll(testDest)
+
+	// touch pid file (must not be deleted)
+	ioutil.WriteFile(
+		testDest+"/test.pid",
+		[]byte(fmt.Sprintf("%d", os.Getpid())),
+		0644,
+	)
+
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test.tar
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
+dest: ` + testDest + `
+excludes:
+  - "*.pid"
+  - baz
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy()
+	if err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Open(testDest + "/foo/baz"); err == nil {
+		t.Error("/foo/baz must be excluded")
+	}
+	if _, err := os.Open(testDest + "/bar"); err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Open(testDest + "/test.pid"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDeployManifestExcludeFrom(t *testing.T) {
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	testDest := _testDest.Name()
+	os.Remove(testDest)
+	os.Mkdir(testDest, 0755)
+	defer os.RemoveAll(testDest)
+
+	// touch pid file (must not be deleted)
+	ioutil.WriteFile(
+		testDest+"/test.pid",
+		[]byte(fmt.Sprintf("%d", os.Getpid())),
+		0644,
+	)
+
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test.tar
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
+dest: ` + testDest + `
+exclude_from: exclude.txt
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy()
+	if err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Open(testDest + "/foo/baz"); err == nil {
+		t.Error("/foo/baz must be excluded")
+	}
+	if _, err := os.Open(testDest + "/bar"); err != nil {
+		t.Error(err)
+	}
+	if _, err := os.Open(testDest + "/test.pid"); err != nil {
+		t.Error(err)
+	}
+}

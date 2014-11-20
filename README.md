@@ -14,6 +14,9 @@ commands:
     - echo 'staring deploy'
   post:
     - echo 'deploy done'
+excludes:
+  - "*.pid"
+  - "*.socket"
 ```
 
 ## run
@@ -58,8 +61,70 @@ $ consul event -name deploy s3://example.com/deploy-20141117-112233.yml
   1. Fetching event from `consul watch`.
   2. Get manifest URL.
   3. Get src URL and store to tmporary directory (by `os.TempDir()`) and Check `checksum`.
-  4. Invoke `Pre` commands.
+  4. Invoke `pre` commands.
   5. Extract src archive to temporary directory.
   6. Sync files from extracted archive to `dest` directory
     * by `rsync -a --delete`
-  7. Invoke `Post` commands.
+  7. Invoke `post` commands.
+
+
+## Manifest spec
+
+### `src`
+
+* Source archive URL.
+* URL schema: 's3', 'http', 'file'
+* Format: 'tar', 'tar.gz'
+
+```yml
+src: http://example.com/src/archive.tar.gz
+```
+
+### `checksum`
+
+* Checksum of source archive.
+* Type: 'md5', 'sha1', 'sha256', 'sha512'
+
+```yml
+checksum: e0840daaa97cd2cf2175f9e5d133ffb3324a2b93
+```
+
+### `dest`
+
+* Destination directory.
+
+```yml
+dest: /home/stretcher/app
+```
+
+### `commands`
+
+* `pre`: Commands which will be invoked at before `src` archive extracted.
+* `post`: Commands which will be invoked at after `dest` directory synced.
+
+```yml
+commands:
+  pre:
+    - echo 'staring deploy'
+  post:
+    - echo 'deploy done'
+```
+
+### `excludes`
+
+* Pass to `rsync --exclude` arguments.
+
+```yml
+excludes:
+  - "*.pid"
+  - "*.socket"
+```
+
+### `exclude_from`
+
+* Pass to `rsync --exclude-from` arguments.
+* The file must be included in `src` archive.
+
+```yml
+excludes_from: exclude.list
+```

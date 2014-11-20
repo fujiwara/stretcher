@@ -6,21 +6,25 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	"io"
 	"gopkg.in/yaml.v1"
 	"hash"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"io/ioutil"
 	"strings"
 )
 
+var RsyncDefaultOpts = []string{"-av", "--delete"}
+
 type Manifest struct {
-	Src      string   `yaml:"src"`
-	CheckSum string   `yaml:"checksum"`
-	Dest     string   `yaml:"dest"`
-	Commands Commands `yaml:"commands"`
+	Src         string   `yaml:"src"`
+	CheckSum    string   `yaml:"checksum"`
+	Dest        string   `yaml:"dest"`
+	Commands    Commands `yaml:"commands"`
+	Excludes    []string `yaml:"excludes"`
+	ExcludeFrom string   `yaml:"exclude_from"`
 }
 
 type Commands struct {
@@ -123,10 +127,21 @@ func (m *Manifest) Deploy() error {
 		to = to + "/"
 	}
 
-	log.Println("rsync -av --delete", from, to)
-	out, err = exec.Command("rsync", "-av", "--delete", from, to).CombinedOutput()
+	args := []string{}
+	args = append(args, RsyncDefaultOpts...)
+	if m.ExcludeFrom != "" {
+		args = append(args, "--exclude-from", from + m.ExcludeFrom)
+	}
+	if len(m.Excludes) > 0 {
+		for _, ex := range m.Excludes {
+			args = append(args, "--exclude", ex)
+		}
+	}
+	args = append(args, from, to)
+
+	log.Println("rsync", args)
+	out, err = exec.Command("rsync", args...).CombinedOutput()
 	if err != nil {
-		log.Println("failed: rsync -av --delete", from, to)
 		return err
 	}
 	fmt.Println(string(out))
