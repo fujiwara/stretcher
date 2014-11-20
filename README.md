@@ -126,5 +126,5 @@ excludes:
 * The file must be included in `src` archive.
 
 ```yml
-excludes_from: exclude.list
+exclude_from: exclude.list
 ```
