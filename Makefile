@@ -1,8 +1,9 @@
 GIT_VER := $(shell git describe --tags)
 DATE := $(shell date +%Y-%m-%dT%H:%M:%S%z)
 
-all: test
-	go get github.com/fujiwara/stretcher/cmd/stretcher
+all:
+	cd cmd/stretcher && go build -ldflags "-X main.version ${GIT_VER} -X main.buildDate ${DATE}" && install ./stretcher ${GOPATH}/bin
+
 
 .PHONY: test get-deps binary
 test:
