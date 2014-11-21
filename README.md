@@ -3,7 +3,7 @@ stretcher
 
 A deployment tool with consul event.
 
-## example manifest
+## Example manifest
 
 ```yml
 src: s3://example.com/app.tar.gz
@@ -19,13 +19,13 @@ excludes:
   - "*.socket"
 ```
 
-## run
+## Run
 
 ### stretcher agent
 
 A stretcher agent is designed as running under "consul watch" and will be kicked by consul event.
 
-When you use S3 URL, export `AWS_CONFIG_FILE` environment variable.
+When you specify S3 URL, requires `AWS_CONFIG_FILE` environment variable.
 
 ```
 $ export AWS_CONFIG_FILE=/path/to/.aws/config
@@ -34,39 +34,36 @@ $ consul watch -type event -name deploy /path/to/stretcher
 
 * `-name`: your deployment identifiy name.
 
-### deployment process
+### Deployment process
 
-#### preparing
+#### Preparing
 
-1. Create tar(or tar.gz) archive for deployment.
+This process is not included in a stretcher agent.
+
+1. Create a tar(or tar.gz) archive for deployment.
 2. Upload the archive file to remote server (S3 or HTTP(S)).
 3. Create a manifest file (YAML) and upload it to remote server.
-  * `src`: archive URL.
-  * `checksum`: archive file's checksum. (md5, sha1, sha256 or sha512 hex format)
-  * `dest`: destination directory path.
-  * `commands`:
-    * `pre`: commands to be executed at before the archive extracted.
-    * `post`: commands to be executed at after the archive extracted.
 
-#### executing
+#### Executing
 
-1. Create a consul event.
+Create a consul event to kick stretcher agents.
+
 ```
 $ consul event -name deploy s3://example.com/deploy-20141117-112233.yml
 ```
-  * `-name`: same as stretcher agent event name.
-  * payload: manifest URL.
+  * `-name`: Same as stretcher agent event name.
+  * payload: Manifest URL.
 
-2. (agent)
-  1. Fetching event from `consul watch`.
-  2. Get manifest URL.
-  3. Get src URL and store to tmporary directory (by `os.TempDir()`) and Check `checksum`.
-  4. Invoke `pre` commands.
-  5. Extract src archive to temporary directory.
-  6. Sync files from extracted archive to `dest` directory
-    * by `rsync -a --delete`
-  7. Invoke `post` commands.
+stretcher agent executes a following process.
 
+1. Recieve a consul event from `consul watch`.
+2. Get manifest URL.
+3. Get src URL and store it to a temporary file, and Check `checksum`.
+4. Invoke `pre` commands.
+5. Extract `src` archive to a temporary directory.
+6. Sync files from extracted archive to `dest` directory
+  * using `rsync -a --delete`
+7. Invoke `post` commands.
 
 ## Manifest spec
 
