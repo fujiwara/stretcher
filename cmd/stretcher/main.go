@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fujiwara/stretcher"
-	"os"
+	"log"
 )
 
 var (
@@ -23,7 +23,8 @@ func main() {
 	if showVersion {
 		fmt.Println("version:", version)
 		fmt.Println("build:", buildDate)
-		os.Exit(0)
+		return
 	}
+	log.Println("stretcher version:", version)
 	stretcher.Run()
 }
