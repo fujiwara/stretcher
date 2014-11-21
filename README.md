@@ -125,3 +125,17 @@ excludes:
 ```yml
 exclude_from: exclude.list
 ```
+
+## Requirements
+
+* [Consul](http://consul.io) version 0.4.1 or later.
+* tar
+* rsync
+
+tar and rsync must be exist in PATH environment.
+
+## LICENSE
+
+The MIT License (MIT)
+
+Copyright (c) 2014 FUJIWARA Shunichiro
