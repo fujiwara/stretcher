@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/crowdmob/goamz/aws"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 )
@@ -34,7 +33,7 @@ func LoadAWSConfigFile(file string) error {
 		SecretKey: config["aws_secret_access_key"],
 	}
 	AWSRegion = aws.GetRegion(config["region"])
-	log.Printf("aws_access_key_id=%s", AWSAuth.AccessKey)
-	log.Printf("region=%s", AWSRegion.Name)
+	Logger.Printf("aws_access_key_id=%s", AWSAuth.AccessKey)
+	Logger.Printf("region=%s", AWSRegion.Name)
 	return nil
 }

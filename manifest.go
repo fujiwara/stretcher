@@ -10,7 +10,6 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -25,35 +24,6 @@ type Manifest struct {
 	Commands    Commands `yaml:"commands"`
 	Excludes    []string `yaml:"excludes"`
 	ExcludeFrom string   `yaml:"exclude_from"`
-}
-
-type Commands struct {
-	Pre  []string `yaml:"pre"`
-	Post []string `yaml:"post"`
-}
-
-func (m *Manifest) InvokePreDeployCommands() error {
-	for _, comm := range m.Commands.Pre {
-		log.Println("invoking pre deploy command:", comm)
-		out, err := exec.Command("sh", "-c", comm).CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed:", comm, err)
-		}
-		fmt.Println(string(out))
-	}
-	return nil
-}
-
-func (m *Manifest) InvokePostDeployCommands() error {
-	for _, comm := range m.Commands.Post {
-		log.Println("invoking post deploy command:", comm)
-		out, err := exec.Command("sh", "-c", comm).CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed:", comm, err)
-		}
-		fmt.Println(string(out))
-	}
-	return nil
 }
 
 func (m *Manifest) newHash() (hash.Hash, error) {
@@ -89,11 +59,11 @@ func (m *Manifest) Deploy() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Wrote %d bytes to %s", written, tmp.Name())
+	Logger.Printf("Wrote %d bytes to %s", written, tmp.Name())
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
 		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
 	} else {
-		log.Printf("Checksum ok: %s", sum)
+		Logger.Printf("Checksum ok: %s", sum)
 	}
 
 	dir, err := ioutil.TempDir(os.TempDir(), "stretcher_src")
@@ -102,7 +72,7 @@ func (m *Manifest) Deploy() error {
 	}
 	defer os.RemoveAll(dir)
 
-	err = m.InvokePreDeployCommands()
+	err = m.Commands.Pre.Invoke()
 	if err != nil {
 		return err
 	}
@@ -112,10 +82,10 @@ func (m *Manifest) Deploy() error {
 		return err
 	}
 
-	log.Println("Extract archive:", tmp.Name(), "to", dir)
+	Logger.Println("Extract archive:", tmp.Name(), "to", dir)
 	out, err := exec.Command("tar", "xf", tmp.Name()).CombinedOutput()
 	if err != nil {
-		log.Println("failed: tar xf", tmp.Name(), "failed", err)
+		Logger.Println("failed: tar xf", tmp.Name(), "failed", err)
 		return err
 	}
 	fmt.Println(string(out))
@@ -130,7 +100,7 @@ func (m *Manifest) Deploy() error {
 	args := []string{}
 	args = append(args, RsyncDefaultOpts...)
 	if m.ExcludeFrom != "" {
-		args = append(args, "--exclude-from", from + m.ExcludeFrom)
+		args = append(args, "--exclude-from", from+m.ExcludeFrom)
 	}
 	if len(m.Excludes) > 0 {
 		for _, ex := range m.Excludes {
@@ -139,18 +109,18 @@ func (m *Manifest) Deploy() error {
 	}
 	args = append(args, from, to)
 
-	log.Println("rsync", args)
+	Logger.Println("rsync", args)
 	out, err = exec.Command("rsync", args...).CombinedOutput()
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(out))
+	Logger.Println(string(out))
 
 	if err = os.Chdir(cwd); err != nil {
 		return err
 	}
 
-	err = m.InvokePostDeployCommands()
+	err = m.Commands.Post.Invoke()
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,11 @@ commands:
     - echo 'staring deploy'
   post:
     - echo 'deploy done'
+  success:
+    - echo 'deploy success'
+  failure:
+    - echo 'deploy failed!!'
+    - cat >> /path/to/failure.log
 excludes:
   - "*.pid"
   - "*.socket"
@@ -98,6 +103,8 @@ dest: /home/stretcher/app
 
 * `pre`: Commands which will be invoked at before `src` archive extracted.
 * `post`: Commands which will be invoked at after `dest` directory synced.
+* `success`: Commands which will be invoked at deployment process is succeeded.
+* `failure`: Commands which will be invoked at deployment process is failed.
 
 ```yml
 commands:
@@ -105,7 +112,14 @@ commands:
     - echo 'staring deploy'
   post:
     - echo 'deploy done'
+  success:
+    - echo 'deploy success'
+  failure:
+    - echo 'deploy failed!!'
+    - cat >> /path/to/failure.log
 ```
+
+stretcher agent logs will be passed to STDIN of `success` and `failure` commands.
 
 ### `excludes`
 
