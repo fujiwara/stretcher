@@ -1,10 +1,10 @@
 package stretcher
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"os"
-	"bytes"
 )
 
 type LogWriter struct {

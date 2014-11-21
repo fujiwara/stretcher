@@ -2,10 +2,10 @@ package stretcher
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"fmt"
 )
 
 type Commands struct {

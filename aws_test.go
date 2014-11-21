@@ -1,8 +1,8 @@
 package stretcher_test
 
 import (
-	"testing"
 	"github.com/fujiwara/stretcher"
+	"testing"
 )
 
 func TestLoadAWSConfigFile(t *testing.T) {
