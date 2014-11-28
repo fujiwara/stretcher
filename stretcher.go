@@ -7,6 +7,7 @@ import (
 	"github.com/crowdmob/goamz/s3"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,25 +17,28 @@ var (
 	AWSAuth   aws.Auth
 	AWSRegion aws.Region
 	LogBuffer bytes.Buffer
-	Logger    = NewLogger(&LogBuffer)
 )
 
+func Init() {
+	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
+}
+
 func Run() {
-	Logger.Println("Starting up stretcher agent")
+	log.Println("Starting up stretcher agent")
 
 	if file := os.Getenv("AWS_CONFIG_FILE"); file != "" {
 		err := LoadAWSConfigFile(file)
 		if err != nil {
-			Logger.Println("Load AWS_CONFIG_FILE failed:", err)
+			log.Println("Load AWS_CONFIG_FILE failed:", err)
 			return
 		}
 	}
 
-	Logger.Println("Waiting for consul events from STDIN...")
+	log.Println("Waiting for consul events from STDIN...")
 
 	ev, err := ParseConsulEvents(os.Stdin)
 	if err != nil {
-		Logger.Println("Parse consul events failed:", err)
+		log.Println("Parse consul events failed:", err)
 		return
 	}
 	if ev == nil {
@@ -42,18 +46,18 @@ func Run() {
 		return
 	}
 
-	Logger.Println("Executing manifest:", ev.PayloadString())
+	log.Println("Executing manifest:", ev.PayloadString())
 	m, err := getManifest(ev.PayloadString())
 	if err != nil {
-		Logger.Println("Load manifest failed:", err)
+		log.Println("Load manifest failed:", err)
 		return
 	}
-	Logger.Printf("%#v", m)
+	log.Printf("%#v", m)
 
 	err = m.Deploy()
 	if err != nil {
 		m.Commands.Failure.InvokePipe(&LogBuffer)
-		Logger.Println("Deploy manifest failed:", err)
+		log.Println("Deploy manifest failed:", err)
 	} else {
 		m.Commands.Success.InvokePipe(&LogBuffer)
 	}
@@ -89,7 +93,7 @@ func getHTTP(u *url.URL) (io.ReadCloser, error) {
 }
 
 func getURL(urlStr string) (io.ReadCloser, error) {
-	Logger.Println("loading URL", urlStr)
+	log.Println("loading URL", urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err

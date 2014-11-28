@@ -26,5 +26,6 @@ func main() {
 		return
 	}
 	log.Println("stretcher version:", version)
+	stretcher.Init()
 	stretcher.Run()
 }

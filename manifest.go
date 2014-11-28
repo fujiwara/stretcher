@@ -10,6 +10,7 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -59,11 +60,11 @@ func (m *Manifest) Deploy() error {
 	if err != nil {
 		return err
 	}
-	Logger.Printf("Wrote %d bytes to %s", written, tmp.Name())
+	log.Printf("Wrote %d bytes to %s", written, tmp.Name())
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
 		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
 	} else {
-		Logger.Printf("Checksum ok: %s", sum)
+		log.Printf("Checksum ok: %s", sum)
 	}
 
 	dir, err := ioutil.TempDir(os.TempDir(), "stretcher_src")
@@ -82,10 +83,10 @@ func (m *Manifest) Deploy() error {
 		return err
 	}
 
-	Logger.Println("Extract archive:", tmp.Name(), "to", dir)
+	log.Println("Extract archive:", tmp.Name(), "to", dir)
 	out, err := exec.Command("tar", "xf", tmp.Name()).CombinedOutput()
 	if err != nil {
-		Logger.Println("failed: tar xf", tmp.Name(), "failed", err)
+		log.Println("failed: tar xf", tmp.Name(), "failed", err)
 		return err
 	}
 	fmt.Println(string(out))
@@ -109,12 +110,12 @@ func (m *Manifest) Deploy() error {
 	}
 	args = append(args, from, to)
 
-	Logger.Println("rsync", args)
+	log.Println("rsync", args)
 	out, err = exec.Command("rsync", args...).CombinedOutput()
 	if err != nil {
 		return err
 	}
-	Logger.Println(string(out))
+	log.Println(string(out))
 
 	if err = os.Chdir(cwd); err != nil {
 		return err

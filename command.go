@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -45,17 +46,17 @@ func (c CommandLine) String() string {
 }
 
 func (c CommandLine) Invoke() error {
-	Logger.Println("invoking command:", c.String())
+	log.Println("invoking command:", c.String())
 	out, err := exec.Command("sh", "-c", c.String()).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed:", c, err)
 	}
-	Logger.Println(string(out))
+	log.Println(string(out))
 	return nil
 }
 
 func (c CommandLine) InvokePipe(src io.Reader) error {
-	Logger.Println("invoking command:", c.String())
+	log.Println("invoking command:", c.String())
 	cmd := exec.Command("sh", "-c", c.String())
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
