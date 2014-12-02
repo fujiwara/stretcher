@@ -56,9 +56,10 @@ func Run() {
 
 	err = m.Deploy()
 	if err != nil {
-		m.Commands.Failure.InvokePipe(&LogBuffer)
 		log.Println("Deploy manifest failed:", err)
+		m.Commands.Failure.InvokePipe(&LogBuffer)
 	} else {
+		log.Println("Deploy manifest succeeded.")
 		m.Commands.Success.InvokePipe(&LogBuffer)
 	}
 }
