@@ -1,13 +1,12 @@
 GIT_VER := $(shell git describe --tags)
 DATE := $(shell date +%Y-%m-%dT%H:%M:%S%z)
 
-all:
-	cd cmd/stretcher && go build -ldflags "-X main.version ${GIT_VER} -X main.buildDate ${DATE}" && install ./stretcher ${GOPATH}/bin
-
-
-.PHONY: test get-deps binary
+.PHONY: test get-deps binary install
 test:
 	go test
+
+install:
+	cd cmd/stretcher && go build -ldflags "-X main.version ${GIT_VER} -X main.buildDate ${DATE}" && install ./stretcher ${GOPATH}/bin
 
 get-deps:
 	go get -t -d -v .
