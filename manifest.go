@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	"gopkg.in/yaml.v1"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -14,17 +13,21 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"gopkg.in/yaml.v1"
 )
 
 var RsyncDefaultOpts = []string{"-av", "--delete"}
+var DefaultDestMode = os.FileMode(0755)
 
 type Manifest struct {
-	Src         string   `yaml:"src"`
-	CheckSum    string   `yaml:"checksum"`
-	Dest        string   `yaml:"dest"`
-	Commands    Commands `yaml:"commands"`
-	Excludes    []string `yaml:"excludes"`
-	ExcludeFrom string   `yaml:"exclude_from"`
+	Src         string       `yaml:"src"`
+	CheckSum    string       `yaml:"checksum"`
+	Dest        string       `yaml:"dest"`
+	DestMode    *os.FileMode `yaml:"dest_mode"`
+	Commands    Commands     `yaml:"commands"`
+	Excludes    []string     `yaml:"excludes"`
+	ExcludeFrom string       `yaml:"exclude_from"`
 }
 
 func (m *Manifest) newHash() (hash.Hash, error) {
@@ -90,6 +93,12 @@ func (m *Manifest) Deploy() error {
 		return err
 	}
 	fmt.Println(string(out))
+
+	log.Println("Set dest mode", *m.DestMode)
+	err = os.Chmod(dir, *m.DestMode)
+	if err != nil {
+		return err
+	}
 
 	from := dir + "/"
 	to := m.Dest
@@ -173,6 +182,10 @@ func ParseManifest(data []byte) (*Manifest, error) {
 	}
 	if m.Dest == "" {
 		return nil, fmt.Errorf("Dest is required")
+	}
+	if m.DestMode == nil {
+		mode := DefaultDestMode
+		m.DestMode = &mode
 	}
 	return m, nil
 }

@@ -2,10 +2,11 @@ package stretcher_test
 
 import (
 	"fmt"
-	"github.com/fujiwara/stretcher"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fujiwara/stretcher"
 )
 
 func TestParseManifest(t *testing.T) {
@@ -172,5 +173,36 @@ exclude_from: exclude.txt
 	}
 	if _, err := os.Open(testDest + "/test.pid"); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestDeployManifestDestMode(t *testing.T) {
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	testDest := _testDest.Name()
+	os.Remove(testDest)
+	os.Mkdir(testDest, 0755)
+	defer os.RemoveAll(testDest)
+
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test_no_top_dir.tar
+checksum: da5ec3a7dca4b0492a0ba0104f7cc7ad2ae2eafc
+dest: ` + testDest + `
+dest_mode: 0711
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy()
+	if err != nil {
+		t.Error(err)
+	}
+	stat, err := os.Stat(testDest)
+	if err != nil {
+		t.Error(err)
+	}
+	if stat.Mode().Perm() != 0711 {
+		t.Errorf("dest mode %s expected 0711", stat.Mode().Perm())
 	}
 }

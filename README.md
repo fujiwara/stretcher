@@ -74,7 +74,8 @@ stretcher agent executes a following process.
 
 ### `src`
 
-* Source archive URL.
+Source archive URL.
+
 * URL schema: 's3', 'http', 'file'
 * Format: 'tar', 'tar.gz'
 
@@ -84,7 +85,8 @@ src: http://example.com/src/archive.tar.gz
 
 ### `checksum`
 
-* Checksum of source archive.
+Checksum of source archive.
+
 * Type: 'md5', 'sha1', 'sha256', 'sha512'
 
 ```yml
@@ -93,11 +95,24 @@ checksum: e0840daaa97cd2cf2175f9e5d133ffb3324a2b93
 
 ### `dest`
 
-* Destination directory.
+Destination directory.
 
 ```yml
 dest: /home/stretcher/app
 ```
+
+### `dest_mode`
+
+Destination directory mode. Default: 0755
+
+```yml
+dest_mode: 0711
+```
+
+Destination directory's mode will be set as...
+
+1. `src` archive includes `.` => same of `.` in the archive.
+2. `src` archive does not include `.` => `dest_mode`
 
 ### `commands`
 
@@ -123,7 +138,7 @@ stretcher agent logs will be passed to STDIN of `success` and `failure` commands
 
 ### `excludes`
 
-* Pass to `rsync --exclude` arguments.
+Pass to `rsync --exclude` arguments.
 
 ```yml
 excludes:
@@ -133,8 +148,8 @@ excludes:
 
 ### `exclude_from`
 
-* Pass to `rsync --exclude-from` arguments.
-* The file must be included in `src` archive.
+Pass to `rsync --exclude-from` arguments.
+The file must be included in `src` archive.
 
 ```yml
 exclude_from: exclude.list
