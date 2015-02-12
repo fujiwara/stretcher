@@ -109,9 +109,9 @@ Destination directory mode. Default: 0755
 dest_mode: 0711
 ```
 
-Destination directory's mode will be set as...
+Destination directory mode will be set as...
 
-1. `src` archive includes `.` => same of `.` in the archive.
+1. `src` archive includes `.` => same as `.` in the archive.
 2. `src` archive does not include `.` => `dest_mode`
 
 ### `commands`
