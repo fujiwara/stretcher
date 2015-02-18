@@ -88,11 +88,13 @@ func (m *Manifest) Deploy() error {
 
 	log.Println("Extract archive:", tmp.Name(), "to", dir)
 	out, err := exec.Command("tar", "xf", tmp.Name()).CombinedOutput()
+	if len(out) > 0 {
+		log.Println(string(out))
+	}
 	if err != nil {
 		log.Println("failed: tar xf", tmp.Name(), "failed", err)
 		return err
 	}
-	fmt.Println(string(out))
 
 	log.Println("Set dest mode", *m.DestMode)
 	err = os.Chmod(dir, *m.DestMode)
@@ -121,10 +123,12 @@ func (m *Manifest) Deploy() error {
 
 	log.Println("rsync", args)
 	out, err = exec.Command("rsync", args...).CombinedOutput()
+	if len(out) > 0 {
+		log.Println(string(out))
+	}
 	if err != nil {
 		return err
 	}
-	log.Println(string(out))
 
 	if err = os.Chdir(cwd); err != nil {
 		return err
