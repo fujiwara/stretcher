@@ -63,13 +63,20 @@ func TestCommandLinesPipe(t *testing.T) {
 func TestCommandLinesFail(t *testing.T) {
 	stretcher.Init()
 	cmdlines := stretcher.CommandLines{
-		stretcher.CommandLine("false"),
+		stretcher.CommandLine("echo 'FOO'; echo 'BAR' 2>&1; false"),
 	}
 	err := cmdlines.Invoke()
 	if err == nil {
 		t.Error("false command must fail")
 	}
-	if fmt.Sprintf("%s", err) != "failed: false exit status 1" {
+	if fmt.Sprintf("%s", err) != "failed: echo 'FOO'; echo 'BAR' 2>&1; false exit status 1" {
 		t.Error("invalid err message.", err)
+	}
+	output := string(stretcher.LogBuffer.Bytes())
+	if !strings.Contains(output, "FOO\n") {
+		t.Error("output does not contain FOO\\n")
+	}
+	if !strings.Contains(output, "BAR\n") {
+		t.Error("output does not contain BAR\\n")
 	}
 }

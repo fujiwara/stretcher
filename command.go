@@ -48,10 +48,12 @@ func (c CommandLine) String() string {
 func (c CommandLine) Invoke() error {
 	log.Println("invoking command:", c.String())
 	out, err := exec.Command("sh", "-c", c.String()).CombinedOutput()
+	if len(out) > 0 {
+		log.Println(string(out))
+	}
 	if err != nil {
 		return fmt.Errorf("failed: %v %v", c, err)
 	}
-	log.Println(string(out))
 	return nil
 }
 
