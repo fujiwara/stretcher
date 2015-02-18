@@ -49,7 +49,7 @@ func (c CommandLine) Invoke() error {
 	log.Println("invoking command:", c.String())
 	out, err := exec.Command("sh", "-c", c.String()).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed:", c, err)
+		return fmt.Errorf("failed: %v %v", c, err)
 	}
 	log.Println(string(out))
 	return nil

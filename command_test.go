@@ -3,12 +3,13 @@ package stretcher_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/fujiwara/stretcher"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/fujiwara/stretcher"
 )
 
 func TestCommandLines(t *testing.T) {
@@ -56,5 +57,19 @@ func TestCommandLinesPipe(t *testing.T) {
 	}
 	if bytes.Compare(toWrite, wrote) != 0 {
 		t.Error("unexpected wrote data", wrote)
+	}
+}
+
+func TestCommandLinesFail(t *testing.T) {
+	stretcher.Init()
+	cmdlines := stretcher.CommandLines{
+		stretcher.CommandLine("false"),
+	}
+	err := cmdlines.Invoke()
+	if err == nil {
+		t.Error("false command must fail")
+	}
+	if fmt.Sprintf("%s", err) != "failed: false exit status 1" {
+		t.Error("invalid err message.", err)
 	}
 }
