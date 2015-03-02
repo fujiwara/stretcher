@@ -3,14 +3,15 @@ package stretcher
 import (
 	"bytes"
 	"fmt"
-	"github.com/crowdmob/goamz/aws"
-	"github.com/crowdmob/goamz/s3"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/crowdmob/goamz/aws"
+	"github.com/crowdmob/goamz/s3"
 )
 
 var (
@@ -26,8 +27,12 @@ func Init() {
 func Run() {
 	log.Println("Starting up stretcher agent")
 
+	profile := os.Getenv("AWS_DEFAULT_PROFILE")
+	if profile == "" {
+		profile = AWSDefaultProfileName
+	}
 	if file := os.Getenv("AWS_CONFIG_FILE"); file != "" {
-		err := LoadAWSConfigFile(file)
+		err := LoadAWSConfigFile(file, profile)
 		if err != nil {
 			log.Println("Load AWS_CONFIG_FILE failed:", err)
 			return
