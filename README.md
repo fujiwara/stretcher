@@ -30,7 +30,7 @@ excludes:
 
 A stretcher agent is designed as running under "consul watch" and will be kicked by consul event.
 
-When you specify S3 URL, requires `AWS_CONFIG_FILE` environment variable.
+When you specify a S3 URL, requires `AWS_CONFIG_FILE` environment variable.
 
 ```
 $ export AWS_CONFIG_FILE=/path/to/.aws/config
@@ -38,6 +38,8 @@ $ consul watch -type event -name deploy /path/to/stretcher
 ```
 
 * `-name`: your deployment identifiy name.
+
+`AWS_DEFAULT_PROFILE` is also supported to select a profile from multiple aws profiles in `AWS_CONFIG_FILE`.
 
 ### Deployment process
 
