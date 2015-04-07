@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fujiwara/stretcher"
 	"log"
+
+	"github.com/fujiwara/stretcher"
+	"github.com/tcnksm/go-latest"
 )
 
 var (
@@ -23,9 +25,25 @@ func main() {
 	if showVersion {
 		fmt.Println("version:", version)
 		fmt.Println("build:", buildDate)
+		checkLatest(version)
 		return
 	}
 	log.Println("stretcher version:", version)
 	stretcher.Init()
 	stretcher.Run()
+}
+
+func checkLatest(version string) {
+	githubTag := &latest.GithubTag{
+		Owner:      "fujiwara",
+		Repository: "stretcher",
+	}
+	res, err := latest.Check(githubTag, version)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if res.Outdated {
+		fmt.Printf("%s is not latest, you should upgrade to %s\n", version, res.Current)
+	}
 }
