@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/fujiwara/stretcher"
 	"github.com/tcnksm/go-latest"
@@ -33,10 +34,18 @@ func main() {
 	stretcher.Run()
 }
 
+func fixVersionStr(v string) string {
+	v = strings.TrimPrefix(v, "v")
+	vs := strings.Split(v, "-")
+	return vs[0]
+}
+
 func checkLatest(version string) {
+	version = fixVersionStr(version)
 	githubTag := &latest.GithubTag{
-		Owner:      "fujiwara",
-		Repository: "stretcher",
+		Owner:             "fujiwara",
+		Repository:        "stretcher",
+		FixVersionStrFunc: fixVersionStr,
 	}
 	res, err := latest.Check(githubTag, version)
 	if err != nil {
