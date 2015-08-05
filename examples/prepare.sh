@@ -11,7 +11,7 @@ set -e
 
 echo "build project..."
 cd project
-go build -o hello_world
+make
 
 echo "create arhchive..."
 tar czvf ../example.tar.gz ./
@@ -19,7 +19,7 @@ tar czvf ../example.tar.gz ./
 cd ..
 
 echo "create manifest..."
-SUM=$(sha1sum example.tar.gz | awk '{print $1}')
+SUM=$(openssl dgst -sha256 example.tar.gz | awk '{print $2}')
 CWD=$(pwd)
 cat > example.yml <<EOF
 src: file://${CWD}/example.tar.gz
@@ -27,10 +27,18 @@ checksum: $SUM
 dest: ${CWD}/deployed
 commands:
   pre:
-    - echo "starting deploy"
+    - echo "starting deploy" | post-dashboard example 3
+    - sleep 3
   post:
     - echo "deploy done"
     - ${CWD}/deployed/hello_world
+  success:
+    - post-dashboard example 0
+  failure:
+    - post-dashboard example 2
+excludes:
+  - "*.go"
+  - Makefile
 EOF
 
 cat example.yml
@@ -38,4 +46,5 @@ cat example.yml
 echo "create deploy event"
 consul event -name "example_deploy" "file://${CWD}/example.yml"
 
+echo
 echo "Please run ./exec.sh for deployment."
