@@ -1,6 +1,7 @@
 package stretcher
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -24,7 +25,7 @@ func Init() {
 	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
 }
 
-func Run() {
+func Run() error {
 	log.Println("Starting up stretcher agent")
 
 	profile := os.Getenv("AWS_DEFAULT_PROFILE")
@@ -34,39 +35,31 @@ func Run() {
 	if file := os.Getenv("AWS_CONFIG_FILE"); file != "" {
 		err := LoadAWSConfigFile(file, profile)
 		if err != nil {
-			log.Println("Load AWS_CONFIG_FILE failed:", err)
-			return
+			return fmt.Errorf("Load AWS_CONFIG_FILE failed: %s", err)
 		}
 	}
 
-	log.Println("Waiting for consul events from STDIN...")
-
-	ev, err := ParseConsulEvents(os.Stdin)
+	payload, err := parseEvents()
 	if err != nil {
-		log.Println("Parse consul events failed:", err)
-		return
-	}
-	if ev == nil {
-		// no event
-		return
+		return fmt.Errorf("Could not parse event: %s", err)
 	}
 
-	log.Println("Executing manifest:", ev.PayloadString())
-	m, err := getManifest(ev.PayloadString())
+	log.Println("Loading manifest:", payload)
+	m, err := getManifest(payload)
 	if err != nil {
-		log.Println("Load manifest failed:", err)
-		return
+		return fmt.Errorf("Load manifest failed: %s", err)
 	}
-	log.Printf("%#v", m)
+	log.Printf("Executing manifest %#v", m)
 
 	err = m.Deploy()
 	if err != nil {
 		log.Println("Deploy manifest failed:", err)
 		m.Commands.Failure.InvokePipe(&LogBuffer)
-	} else {
-		log.Println("Deploy manifest succeeded.")
-		m.Commands.Success.InvokePipe(&LogBuffer)
+		return fmt.Errorf("Deploy manifest failed: %s", err)
 	}
+	log.Println("Deploy manifest succeeded.")
+	m.Commands.Success.InvokePipe(&LogBuffer)
+	return nil
 }
 
 func getS3(u *url.URL) (io.ReadCloser, error) {
@@ -123,4 +116,28 @@ func getManifest(manifestURL string) (*Manifest, error) {
 	}
 	data, _ := ioutil.ReadAll(rc)
 	return ParseManifest(data)
+}
+
+func parseEvents() (string, error) {
+	log.Println("Waiting for events from STDIN...")
+	if userEvent := os.Getenv("SERF_USER_EVENT"); userEvent != "" {
+		// serf event passed by stdin (raw string)
+		log.Println("Reading Serf user event:", userEvent)
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			return scanner.Text(), nil
+		}
+		return "", scanner.Err()
+	} else {
+		log.Println("Reading Consul event")
+		ev, err := ParseConsulEvents(os.Stdin)
+		if err != nil {
+			return "", err
+		}
+		if ev == nil {
+			// no event
+			return "", fmt.Errorf("No Consul events found")
+		}
+		return ev.PayloadString(), nil
+	}
 }
