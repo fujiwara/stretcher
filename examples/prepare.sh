@@ -27,15 +27,11 @@ checksum: $SUM
 dest: ${CWD}/deployed
 commands:
   pre:
-    - echo "starting deploy" | post-dashboard example 3
+    - echo "starting deploy"
     - sleep 3
   post:
     - echo "deploy done"
     - ${CWD}/deployed/hello_world
-  success:
-    - post-dashboard example 0
-  failure:
-    - post-dashboard example 2
 excludes:
   - "*.go"
   - Makefile
