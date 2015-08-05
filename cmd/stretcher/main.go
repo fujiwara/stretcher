@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/fujiwara/stretcher"
@@ -31,7 +32,11 @@ func main() {
 	}
 	log.Println("stretcher version:", version)
 	stretcher.Init()
-	stretcher.Run()
+	err := stretcher.Run()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 }
 
 func fixVersionStr(v string) string {
