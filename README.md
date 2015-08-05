@@ -1,7 +1,7 @@
-stretcher
+Stretcher
 =========
 
-A deployment tool with consul event.
+A deployment tool with Consul/Serf event.
 
 ## Example manifest
 
@@ -28,7 +28,9 @@ excludes:
 
 ### stretcher agent
 
-A stretcher agent is designed as running under "consul watch" and will be kicked by consul event.
+#### with Consul
+
+A stretcher agent is designed as running under "consul watch" and will be kicked by [Consul](https://consul.io) event.
 
 When you specify a S3 URL, requires `AWS_CONFIG_FILE` environment variable.
 
@@ -41,6 +43,15 @@ $ consul watch -type event -name deploy /path/to/stretcher
 
 `AWS_DEFAULT_PROFILE` is also supported to select a profile from multiple aws profiles in `AWS_CONFIG_FILE`.
 
+#### with Serf
+
+A stretcher agent can be running as [Serf](https://www.serfdom.io/) event handler.
+
+```
+$ export AWS_CONFIG_FILE=/path/to/.aws/config
+$ serf agent -event-handler="user:deploy=/path/to/stretcher >> /path/to/stretcher.log 2>&1"
+```
+
 ### Deployment process
 
 #### Preparing
@@ -51,26 +62,49 @@ This process is not included in a stretcher agent.
 2. Upload the archive file to remote server (S3 or HTTP(S)).
 3. Create a manifest file (YAML) and upload it to remote server.
 
-#### Executing
+#### Executing with Consul
 
 Create a consul event to kick stretcher agents.
 
 ```
+$ consul event -name [event_name] [manifest_url]
+```
+
+```
 $ consul event -name deploy s3://example.com/deploy-20141117-112233.yml
 ```
-  * `-name`: Same as stretcher agent event name.
-  * payload: Manifest URL.
 
-stretcher agent executes a following process.
+  * `-name`: consul event name (specified by consul watch `-name`)
 
-1. Recieve a consul event from `consul watch`.
-2. Get manifest URL.
+#### Executing with Serf
+
+Create a serf user event to kick stretcher agents.
+
+```
+$ serf event [event_name] [manifest_url]
+```
+
+```
+$ serf event deploy s3://example.com/deploy-20141117-112233.yml
+```
+
+  * event_name: user event name (spcified by serf event handler).
+
+### Deployment process
+
+A stretcher agent executes a following process.
+
+1. Recieve a manifest URL as Consul/Serf event's payload.
+2. Get a manifest.
 3. Get src URL and store it to a temporary file, and Check `checksum`.
 4. Invoke `pre` commands.
 5. Extract `src` archive to a temporary directory.
-6. Sync files from extracted archive to `dest` directory
-  * using `rsync -a --delete`
+6. Sync files from extracted archive to `dest` directory.
+  - use `rsync -a --delete`
 7. Invoke `post` commands.
+8.
+  - Invoke `success` commands when the deployment process succeeded.
+  - Invoke `success` commands when the deployment process failed.
 
 ## Manifest spec
 
@@ -159,7 +193,6 @@ exclude_from: exclude.list
 
 ## Requirements
 
-* [Consul](http://consul.io) version 0.4.1 or later.
 * tar
 * rsync
 
@@ -169,4 +202,4 @@ tar and rsync must be exist in PATH environment.
 
 The MIT License (MIT)
 
-Copyright (c) 2014 FUJIWARA Shunichiro
+Copyright (c) 2014- FUJIWARA Shunichiro
