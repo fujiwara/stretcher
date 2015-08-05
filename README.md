@@ -1,7 +1,7 @@
 Stretcher
 =========
 
-A deployment tool with Consul/Serf event.
+A deployment tool with [Consul](https://consul.io) / [Serf](https://www.serfdom.io/) event.
 
 ## Example manifest
 
@@ -88,7 +88,7 @@ $ serf event [event_name] [manifest_url]
 $ serf event deploy s3://example.com/deploy-20141117-112233.yml
 ```
 
-  * event_name: user event name (spcified by serf event handler).
+  * event_name: user event name (specified by serf event handler).
 
 ### Deployment process
 
@@ -104,7 +104,7 @@ A stretcher agent executes a following process.
 7. Invoke `post` commands.
 8.
   - Invoke `success` commands when the deployment process succeeded.
-  - Invoke `success` commands when the deployment process failed.
+  - Invoke `failure` commands when the deployment process failed.
 
 ## Manifest spec
 
