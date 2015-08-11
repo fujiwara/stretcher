@@ -35,7 +35,12 @@ func main() {
 	err := stretcher.Run()
 	if err != nil {
 		log.Println(err)
-		os.Exit(1)
+		if os.Getenv("CONSUL_INDEX") != "" {
+			// ensure exit 0 when running under `consul watch`
+			return
+		} else {
+			os.Exit(1)
+		}
 	}
 }
 
