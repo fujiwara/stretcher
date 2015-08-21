@@ -39,7 +39,7 @@ $ export AWS_CONFIG_FILE=/path/to/.aws/config
 $ consul watch -type event -name deploy /path/to/stretcher
 ```
 
-* `-name`: your deployment identifiy name.
+* `-name`: your deployment identity name.
 
 `AWS_DEFAULT_PROFILE` is also supported to select a profile from multiple aws profiles in `AWS_CONFIG_FILE`.
 
@@ -94,7 +94,7 @@ $ serf event deploy s3://example.com/deploy-20141117-112233.yml
 
 A stretcher agent executes a following process.
 
-1. Recieve a manifest URL as Consul/Serf event's payload.
+1. Receive a manifest URL as Consul/Serf event's payload.
 2. Get a manifest.
 3. Get src URL and store it to a temporary file, and Check `checksum`.
 4. Invoke `pre` commands.

@@ -25,5 +25,5 @@ After this step, a deployment event is queued in the consul server.
 
 `exec.sh` runs deployment process notified from the consul server.
 
-1. Recieve a deployment event by `consul watch`.
+1. Receive a deployment event by `consul watch`.
 2. stretcher runs deployment!
