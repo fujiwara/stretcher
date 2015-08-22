@@ -90,6 +90,17 @@ $ serf event deploy s3://example.com/deploy-20141117-112233.yml
 
   * event_name: user event name (specified by serf event handler).
 
+#### Executing as command
+
+Stretcher can read a manifest URL from stdin simply.
+
+```
+$ echo s3://example.com/deploy-20141117-112233.yml | stretcher
+```
+
+You can execute stretcher via ssh or any other methods.
+
+
 ### Deployment process
 
 A stretcher agent executes a following process.

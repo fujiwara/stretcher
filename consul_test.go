@@ -2,8 +2,9 @@ package stretcher_test
 
 import (
 	"bytes"
-	"github.com/fujiwara/stretcher"
 	"testing"
+
+	"github.com/fujiwara/stretcher"
 )
 
 var ConsulInput1 = `[]`
@@ -15,7 +16,7 @@ var ConsulInput2 = `
     "TagFilter": "",
     "ServiceFilter": "",
     "NodeFilter": "",
-    "Payload": "czM6Ly9leGFtcGxlLmNvbS9wYXRoL3RvL3Rhci5nego=",
+    "Payload": "czM6Ly9leGFtcGxlLmNvbS9wYXRoL3RvL3Rhci5neg==",
     "Name": "deploy",
     "ID": "1d6731a8-833c-1aff-94e5-aa5e5a77da9f"
   },

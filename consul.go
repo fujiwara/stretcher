@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 )
 
 type ConsulEvent struct {
@@ -32,5 +33,7 @@ func ParseConsulEvents(in io.Reader) (*ConsulEvent, error) {
 	if len(evs) == 0 {
 		return nil, nil
 	}
-	return &evs[len(evs)-1], nil
+	ev := &evs[len(evs)-1]
+	log.Println("Consul event ID:", ev.ID)
+	return ev, nil
 }

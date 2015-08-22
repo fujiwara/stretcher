@@ -92,7 +92,7 @@ func getHTTP(u *url.URL) (io.ReadCloser, error) {
 }
 
 func getURL(urlStr string) (io.ReadCloser, error) {
-	log.Println("loading URL", urlStr)
+	log.Println("Loading URL", urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
@@ -120,15 +120,7 @@ func getManifest(manifestURL string) (*Manifest, error) {
 
 func parseEvents() (string, error) {
 	log.Println("Waiting for events from STDIN...")
-	if userEvent := os.Getenv("SERF_USER_EVENT"); userEvent != "" {
-		// serf event passed by stdin (raw string)
-		log.Println("Reading Serf user event:", userEvent)
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			return scanner.Text(), nil
-		}
-		return "", scanner.Err()
-	} else {
+	if os.Getenv("CONSUL_INDEX") != "" {
 		log.Println("Reading Consul event")
 		ev, err := ParseConsulEvents(os.Stdin)
 		if err != nil {
@@ -139,5 +131,15 @@ func parseEvents() (string, error) {
 			return "", fmt.Errorf("No Consul events found")
 		}
 		return ev.PayloadString(), nil
+	} else {
+		if userEvent := os.Getenv("SERF_USER_EVENT"); userEvent != "" {
+			log.Println("Reading Serf user event:", userEvent)
+		}
+		// event passed by stdin (raw string)
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			return scanner.Text(), nil
+		}
+		return "", scanner.Err()
 	}
 }
