@@ -43,6 +43,13 @@ $ consul watch -type event -name deploy /path/to/stretcher
 
 `AWS_DEFAULT_PROFILE` is also supported to select a profile from multiple aws profiles in `AWS_CONFIG_FILE`.
 
+Also you may use IAM role with `AWS_DEFAULT_REGION` environment variable in a EC2 instance.
+
+```
+$ export AWS_DEFAULT_REGION="ap-northeast-1"
+$ consul watch -type event -name deploy /path/to/stretcher
+```
+
 #### with Serf
 
 A stretcher agent can be running as [Serf](https://www.serfdom.io/) event handler.
