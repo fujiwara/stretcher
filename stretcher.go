@@ -37,6 +37,12 @@ func Run() error {
 		if err != nil {
 			return fmt.Errorf("Load AWS_CONFIG_FILE failed: %s", err)
 		}
+	} else {
+		LoadAWSAuthFromIAMRole()
+	}
+	region := os.Getenv("AWS_DEFAULT_REGION")
+	if region != "" {
+		AWSRegion = aws.GetRegion(region)
 	}
 
 	payload, err := parseEvents()

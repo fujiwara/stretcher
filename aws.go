@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/AdRoll/goamz/aws"
 )
@@ -66,4 +67,15 @@ func LoadAWSConfigFile(fileName string, profileName string) error {
 	log.Printf("aws_access_key_id=%s", AWSAuth.AccessKey)
 	log.Printf("region=%s", AWSRegion.Name)
 	return nil
+}
+
+func LoadAWSAuthFromIAMRole() {
+	cred, err := aws.GetInstanceCredentials()
+	if err == nil {
+		exptdate, err := time.Parse("2006-01-02T15:04:05Z", cred.Expiration)
+		if err == nil {
+			auth := aws.NewAuth(cred.AccessKeyId, cred.SecretAccessKey, cred.Token, exptdate)
+			AWSAuth = *auth
+		}
+	}
 }
