@@ -40,8 +40,7 @@ func Run() error {
 	} else {
 		LoadAWSAuthFromIAMRole()
 	}
-	region := os.Getenv("AWS_DEFAULT_REGION")
-	if region != "" {
+	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" {
 		AWSRegion = aws.GetRegion(region)
 	}
 
