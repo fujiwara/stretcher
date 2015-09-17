@@ -1,38 +1,66 @@
 package stretcher_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/fujiwara/stretcher"
 )
 
 func TestLoadAWSConfigFile(t *testing.T) {
-	stretcher.LoadAWSConfigFile("test/aws.config", "default")
-	if stretcher.AWSAuth.AccessKey != "DZECFQXRXAPORD3VDEKG" {
+	os.Setenv("AWS_CONFIG_FILE", "test/aws.config")
+
+	auth, region, _ := stretcher.LoadAWSCredentials("")
+	if auth.AccessKey != "DZECFQXRXAPORD3VDEKG" {
 		t.Errorf("access_key mismatch")
 	}
-	if stretcher.AWSAuth.SecretKey != "NEZ5eNlmtE6ZjEQlj/uJpsog2ndjPX+uej1CHMYH" {
+	if auth.SecretKey != "NEZ5eNlmtE6ZjEQlj/uJpsog2ndjPX+uej1CHMYH" {
 		t.Errorf("secret_key mismatch")
 
 	}
-	if stretcher.AWSRegion.Name != "ap-northeast-1" {
+	if region.Name != "ap-northeast-1" {
 		t.Errorf("region mismatch")
 	}
 
-	stretcher.LoadAWSConfigFile("test/aws.config", "dummy")
-	if stretcher.AWSAuth.AccessKey != "AAAAAAAAAAAAAAAAAAAA" {
+	auth, region, _ = stretcher.LoadAWSCredentials("dummy")
+	if auth.AccessKey != "AAAAAAAAAAAAAAAAAAAA" {
 		t.Errorf("access_key mismatch")
 	}
-	if stretcher.AWSAuth.SecretKey != "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" {
+	if auth.SecretKey != "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" {
 		t.Errorf("secret_key mismatch")
 
 	}
-	if stretcher.AWSRegion.Name != "us-east-1" {
+	if region.Name != "us-east-1" {
 		t.Errorf("region mismatch")
 	}
 
-	err := stretcher.LoadAWSConfigFile("test/aws.config", "not_found")
+	os.Setenv("AWS_CONFIG_FILE", "test/aws.config")
+	auth, region, err := stretcher.LoadAWSCredentials("not_found")
 	if err == nil {
 		t.Error("load not_found profile must be error", err)
+	}
+
+	// split config & crecdentials
+	os.Setenv("AWS_CONFIG_FILE", "test/.aws/config")
+	auth, region, err = stretcher.LoadAWSCredentials("foo")
+	if auth.AccessKey != "foo_key" {
+		t.Errorf("access_key mismatch")
+	}
+	if auth.SecretKey != "foo_secret" {
+		t.Errorf("secret_key mismatch")
+	}
+	if region.Name != "us-west-2" {
+		t.Errorf("region mismatch")
+	}
+
+	auth, region, err = stretcher.LoadAWSCredentials("bar")
+	if auth.AccessKey != "bar_key" {
+		t.Errorf("access_key mismatch")
+	}
+	if auth.SecretKey != "bar_secret" {
+		t.Errorf("secret_key mismatch")
+	}
+	if region.Name != "ap-southeast-1" {
+		t.Errorf("region mismatch")
 	}
 }

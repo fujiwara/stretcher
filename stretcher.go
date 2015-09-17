@@ -28,20 +28,10 @@ func Init() {
 func Run() error {
 	log.Println("Starting up stretcher agent")
 
-	profile := os.Getenv("AWS_DEFAULT_PROFILE")
-	if profile == "" {
-		profile = AWSDefaultProfileName
-	}
-	if file := os.Getenv("AWS_CONFIG_FILE"); file != "" {
-		err := LoadAWSConfigFile(file, profile)
-		if err != nil {
-			return fmt.Errorf("Load AWS_CONFIG_FILE failed: %s", err)
-		}
-	} else {
-		LoadAWSAuthFromIAMRole()
-	}
-	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" {
-		AWSRegion = aws.GetRegion(region)
+	var err error
+	AWSAuth, AWSRegion, err = LoadAWSCredentials("")
+	if err != nil {
+		return err
 	}
 
 	payload, err := parseEvents()
