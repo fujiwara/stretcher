@@ -33,6 +33,8 @@ func Run() error {
 	if err != nil {
 		return err
 	}
+	log.Println("region:", AWSRegion.Name)
+	log.Println("aws_access_key_id:", AWSAuth.AccessKey)
 
 	payload, err := parseEvents()
 	if err != nil {

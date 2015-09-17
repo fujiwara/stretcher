@@ -43,6 +43,9 @@ func LoadAWSCredentials(profileName string) (aws.Auth, aws.Region, error) {
 	if auth, _ := aws.EnvAuth(); isValidAuth(auth) {
 		awsAuth = auth
 	}
+	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
+		return awsAuth, awsRegion, nil
+	}
 
 	// 2. from File (~/.aws/config, ~/.aws/credentials)
 	if f := os.Getenv("AWS_CONFIG_FILE"); f != "" {
@@ -68,6 +71,9 @@ func LoadAWSCredentials(profileName string) (aws.Auth, aws.Region, error) {
 			awsRegion = region
 		}
 	}
+	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
+		return awsAuth, awsRegion, nil
+	}
 
 	// 3. from IAM Role
 	cred, err := aws.GetInstanceCredentials()
@@ -78,7 +84,6 @@ func LoadAWSCredentials(profileName string) (aws.Auth, aws.Region, error) {
 			awsAuth = *auth
 		}
 	}
-
 	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
 		return awsAuth, awsRegion, nil
 	}
