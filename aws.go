@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AdRoll/goamz/aws"
+	homedir "github.com/mitchellh/go-homedir"
 	ini "github.com/vaughan0/go-ini"
 )
 
@@ -35,47 +36,51 @@ func LoadAWSCredentials(profileName string) (aws.Auth, aws.Region, error) {
 
 	var awsAuth aws.Auth
 	var awsRegion aws.Region
+
+	// load from File (~/.aws/config, ~/.aws/credentials)
+	configFile := os.Getenv("AWS_CONFIG_FILE")
+	if configFile == "" {
+		if dir, err := homedir.Dir(); err == nil {
+			configFile = filepath.Join(dir, ".aws", "config")
+		}
+	}
+
+	dir, _ := filepath.Split(configFile)
+	_profile := AWSDefaultProfileName
+	if profileName != AWSDefaultProfileName {
+		_profile = "profile " + profileName
+	}
+	auth, region, _ := loadAWSConfigFile(configFile, _profile)
+	if isValidAuth(auth) {
+		awsAuth = auth
+	}
+	if isValidRegion(region) {
+		awsRegion = region
+	}
+
+	credFile := filepath.Join(dir, "credentials")
+	auth, region, _ = loadAWSConfigFile(credFile, profileName)
+	if isValidAuth(auth) {
+		awsAuth = auth
+	}
+	if isValidRegion(region) {
+		awsRegion = region
+	}
+
+	// Override by environment valiable
 	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" {
 		awsRegion = aws.GetRegion(region)
 	}
-
-	// 1. from ENV
-	if auth, _ := aws.EnvAuth(); isValidAuth(auth) {
-		awsAuth = auth
-	}
-	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
-		return awsAuth, awsRegion, nil
-	}
-
-	// 2. from File (~/.aws/config, ~/.aws/credentials)
-	if f := os.Getenv("AWS_CONFIG_FILE"); f != "" {
-		dir, _ := filepath.Split(f)
-		profile := AWSDefaultProfileName
-		if profileName != AWSDefaultProfileName {
-			profile = "profile " + profileName
-		}
-		auth, region, _ := loadAWSConfigFile(f, profile)
-		if isValidAuth(auth) {
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+		if auth, _ := aws.EnvAuth(); isValidAuth(auth) {
 			awsAuth = auth
-		}
-		if isValidRegion(region) {
-			awsRegion = region
-		}
-
-		cred := filepath.Join(dir, "credentials")
-		auth, region, _ = loadAWSConfigFile(cred, profileName)
-		if isValidAuth(auth) {
-			awsAuth = auth
-		}
-		if isValidRegion(region) {
-			awsRegion = region
 		}
 	}
 	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
 		return awsAuth, awsRegion, nil
 	}
 
-	// 3. from IAM Role
+	// Otherwise, use IAM Role
 	cred, err := aws.GetInstanceCredentials()
 	if err == nil {
 		exptdate, err := time.Parse("2006-01-02T15:04:05Z", cred.Expiration)
