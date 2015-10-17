@@ -19,6 +19,7 @@ var (
 	AWSAuth   aws.Auth
 	AWSRegion aws.Region
 	LogBuffer bytes.Buffer
+	Version   string
 )
 
 func Init() {
@@ -26,7 +27,7 @@ func Init() {
 }
 
 func Run() error {
-	log.Println("Starting up stretcher agent")
+	log.Println("Starting up stretcher agent", Version)
 
 	var err error
 	payload, err := parseEvents()
@@ -80,7 +81,13 @@ func getFile(u *url.URL) (io.ReadCloser, error) {
 }
 
 func getHTTP(u *url.URL) (io.ReadCloser, error) {
-	resp, err := http.Get(u.String())
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", "Stretcher/"+Version)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -32,6 +32,7 @@ func main() {
 	}
 	log.Println("stretcher version:", version)
 	stretcher.Init()
+	stretcher.Version = version
 	err := stretcher.Run()
 	if err != nil {
 		log.Println(err)
