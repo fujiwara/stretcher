@@ -1,14 +1,15 @@
 package stretcher
 
 import (
-	"fmt"
-	"io/ioutil"
+	"errors"
 	"log"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
 	"github.com/AdRoll/goamz/aws"
+	homedir "github.com/mitchellh/go-homedir"
+	ini "github.com/vaughan0/go-ini"
 )
 
 const (
@@ -16,66 +17,104 @@ const (
 	AWSDefaultProfileName = "default"
 )
 
-func LoadAWSConfigFile(fileName string, profileName string) error {
-	if profileName == "" {
-		profileName = "default"
-	}
-
-	f, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("Cannot open %s %s", fileName, err)
-	}
-	defer f.Close()
-	body, err := ioutil.ReadAll(f)
-	if err != nil {
-		return fmt.Errorf("Cannot read %s %s", fileName, err)
-	}
-
-	profiles := map[string]map[string]string{}
-	currentProfile := ""
-	for _, line := range strings.Split(string(body), "\n") {
-		if strings.Index(line, "[profile ") == 0 {
-			p := strings.Split(line, " ")
-			if len(p) < 2 {
-				continue
-			}
-			currentProfile = strings.Replace(p[1], "]", "", 1)
-		} else if strings.Index(line, "[default]") == 0 {
-			currentProfile = "default"
-		} else if strings.Index(line, "=") != -1 {
-			pair := strings.Split(line, "=")
-			key := strings.Trim(pair[0], " ")
-			val := strings.Trim(pair[1], " ")
-			if _, ok := profiles[currentProfile]; !ok {
-				profiles[currentProfile] = map[string]string{}
-			}
-			profiles[currentProfile][key] = val
-		}
-	}
-	profile, ok := profiles[profileName]
-	if !ok {
-		return fmt.Errorf("profile [%s] not found in %s", profileName, fileName)
-	}
-	AWSAuth = aws.Auth{
-		AccessKey: profile["aws_access_key_id"],
-		SecretKey: profile["aws_secret_access_key"],
-	}
-	if profile["region"] == "" {
-		profile["region"] = AWSDefaultRegionName
-	}
-	AWSRegion = aws.GetRegion(profile["region"])
-	log.Printf("aws_access_key_id=%s", AWSAuth.AccessKey)
-	log.Printf("region=%s", AWSRegion.Name)
-	return nil
+func isValidAuth(auth aws.Auth) bool {
+	return auth.AccessKey != "" && auth.SecretKey != ""
 }
 
-func LoadAWSAuthFromIAMRole() {
+func isValidRegion(region aws.Region) bool {
+	return region.Name != ""
+}
+
+func LoadAWSCredentials(profileName string) (aws.Auth, aws.Region, error) {
+	if profileName == "" {
+		if p := os.Getenv("AWS_DEFAULT_PROFILE"); p != "" {
+			profileName = p
+		} else {
+			profileName = AWSDefaultProfileName
+		}
+	}
+
+	var awsAuth aws.Auth
+	var awsRegion aws.Region
+
+	// load from File (~/.aws/config, ~/.aws/credentials)
+	configFile := os.Getenv("AWS_CONFIG_FILE")
+	if configFile == "" {
+		if dir, err := homedir.Dir(); err == nil {
+			configFile = filepath.Join(dir, ".aws", "config")
+		}
+	}
+
+	dir, _ := filepath.Split(configFile)
+	_profile := AWSDefaultProfileName
+	if profileName != AWSDefaultProfileName {
+		_profile = "profile " + profileName
+	}
+	auth, region, _ := loadAWSConfigFile(configFile, _profile)
+	if isValidAuth(auth) {
+		awsAuth = auth
+	}
+	if isValidRegion(region) {
+		awsRegion = region
+	}
+
+	credFile := filepath.Join(dir, "credentials")
+	auth, region, _ = loadAWSConfigFile(credFile, profileName)
+	if isValidAuth(auth) {
+		awsAuth = auth
+	}
+	if isValidRegion(region) {
+		awsRegion = region
+	}
+
+	// Override by environment valiable
+	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" {
+		awsRegion = aws.GetRegion(region)
+	}
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+		if auth, _ := aws.EnvAuth(); isValidAuth(auth) {
+			awsAuth = auth
+		}
+	}
+	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
+		return awsAuth, awsRegion, nil
+	}
+
+	// Otherwise, use IAM Role
 	cred, err := aws.GetInstanceCredentials()
 	if err == nil {
 		exptdate, err := time.Parse("2006-01-02T15:04:05Z", cred.Expiration)
 		if err == nil {
 			auth := aws.NewAuth(cred.AccessKeyId, cred.SecretAccessKey, cred.Token, exptdate)
-			AWSAuth = *auth
+			awsAuth = *auth
 		}
 	}
+	if isValidAuth(awsAuth) && isValidRegion(awsRegion) {
+		return awsAuth, awsRegion, nil
+	}
+
+	return awsAuth, awsRegion, errors.New("cannot detect valid credentials or region")
+}
+
+func loadAWSConfigFile(fileName string, profileName string) (aws.Auth, aws.Region, error) {
+	var auth aws.Auth
+	var region aws.Region
+
+	conf, err := ini.LoadFile(fileName)
+	if err != nil {
+		return auth, region, err
+	}
+	log.Printf("Loading file %s [%s]", fileName, profileName)
+
+	for key, value := range conf[profileName] {
+		switch key {
+		case "aws_access_key_id":
+			auth.AccessKey = value
+		case "aws_secret_access_key":
+			auth.SecretKey = value
+		case "region":
+			region = aws.GetRegion(value)
+		}
+	}
+	return auth, region, nil
 }
