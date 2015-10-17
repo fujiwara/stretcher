@@ -32,32 +32,29 @@ excludes:
 
 A stretcher agent is designed as running under "consul watch" and will be kicked by [Consul](https://consul.io) event.
 
-When you specify a S3 URL, requires `AWS_CONFIG_FILE` environment variable.
-
 ```
-$ export AWS_CONFIG_FILE=/path/to/.aws/config
 $ consul watch -type event -name deploy /path/to/stretcher
 ```
 
 * `-name`: your deployment identity name.
-
-`AWS_DEFAULT_PROFILE` is also supported to select a profile from multiple aws profiles in `AWS_CONFIG_FILE`.
-
-Also you may use IAM role with `AWS_DEFAULT_REGION` environment variable in a EC2 instance.
-
-```
-$ export AWS_DEFAULT_REGION="ap-northeast-1"
-$ consul watch -type event -name deploy /path/to/stretcher
-```
 
 #### with Serf
 
 A stretcher agent can be running as [Serf](https://www.serfdom.io/) event handler.
 
 ```
-$ export AWS_CONFIG_FILE=/path/to/.aws/config
 $ serf agent -event-handler="user:deploy=/path/to/stretcher >> /path/to/stretcher.log 2>&1"
 ```
+
+#### Load AWS credentials
+
+When you specify a S3 URL in manifest, requires a AWS credential setting one of below.
+
+- ~/.aws/config and ~/.aws/credentials (overridden by `AWS_CONFIG_FILE` environment variable.)
+  - `AWS_DEFAULT_PROFILE` is supported to select a profile from multiple credentials in file.
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` environment variable.
+- EC2 IAM role.
+  - requires `AWS_DEFAULT_REGION` environment variable.
 
 ### Deployment process
 
