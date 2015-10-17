@@ -29,13 +29,6 @@ func Run() error {
 	log.Println("Starting up stretcher agent")
 
 	var err error
-	AWSAuth, AWSRegion, err = LoadAWSCredentials("")
-	if err != nil {
-		return err
-	}
-	log.Println("region:", AWSRegion.Name)
-	log.Println("aws_access_key_id:", AWSAuth.AccessKey)
-
 	payload, err := parseEvents()
 	if err != nil {
 		return fmt.Errorf("Could not parse event: %s", err)
@@ -60,8 +53,14 @@ func Run() error {
 }
 
 func getS3(u *url.URL) (io.ReadCloser, error) {
+	var err error
 	if AWSAuth.AccessKey == "" || AWSRegion.Name == "" {
-		return nil, fmt.Errorf("Invalid AWS Auth or Region. Please check env AWS_CONFIG_FILE.")
+		AWSAuth, AWSRegion, err = LoadAWSCredentials("")
+		if err != nil {
+			return nil, err
+		}
+		log.Println("region:", AWSRegion.Name)
+		log.Println("aws_access_key_id:", AWSAuth.AccessKey)
 	}
 	client := s3.New(AWSAuth, AWSRegion)
 	bucket := client.Bucket(u.Host)
