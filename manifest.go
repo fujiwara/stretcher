@@ -13,7 +13,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/dustin/go-humanize"
 	"gopkg.in/yaml.v1"
 )
 
@@ -46,6 +48,7 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 }
 
 func (m *Manifest) Deploy() error {
+	begin := time.Now()
 	src, err := getURL(m.Src)
 	if err != nil {
 		return fmt.Errorf("Get src failed:", err)
@@ -63,7 +66,13 @@ func (m *Manifest) Deploy() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Wrote %d bytes to %s", written, tmp.Name())
+	duration := float64(time.Now().Sub(begin).Nanoseconds()) / 1000000000
+	log.Printf("Wrote %s bytes to %s (in %s sec, %s/s)",
+		humanize.Comma(written),
+		tmp.Name(),
+		humanize.Ftoa(duration),
+		humanize.Bytes(uint64(float64(written)/duration)),
+	)
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
 		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
 	} else {
