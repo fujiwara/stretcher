@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 type Commands struct {
@@ -77,22 +78,35 @@ func (c CommandLine) InvokePipe(src io.Reader) error {
 	if err != nil {
 		return err
 	}
-	cmdCh := make(chan error)
-	// src => stdin
+	var wg sync.WaitGroup
+	wg.Add(3)
+	// src => cmd.stdin
 	go func() {
 		_, err := io.Copy(stdin, src)
 		if err != nil {
-			cmdCh <- err
+			log.Println(err)
 		}
 		stdin.Close()
+		wg.Done()
 	}()
-	// wait for command exit
+	// cmd.stdout => stretcher.stdout
 	go func() {
-		cmdCh <- cmd.Wait()
+		_, err := io.Copy(os.Stdout, stdout)
+		if err != nil {
+			log.Println(err)
+		}
+		stdout.Close()
+		wg.Done()
 	}()
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
-
-	cmdErr := <-cmdCh
-	return cmdErr
+	// cmd.stderr => stretcher.stderr
+	go func() {
+		_, err := io.Copy(os.Stderr, stderr)
+		if err != nil {
+			log.Println(err)
+		}
+		stderr.Close()
+		wg.Done()
+	}()
+	wg.Wait()
+	return cmd.Wait()
 }
