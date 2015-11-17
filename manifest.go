@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"gopkg.in/yaml.v1"
+	"gopkg.in/yaml.v2"
 )
 
 var RsyncDefaultOpts = []string{"-av", "--delete"}

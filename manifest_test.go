@@ -206,3 +206,40 @@ dest_mode: 0711
 		t.Errorf("dest mode %s expected 0711", stat.Mode().Perm())
 	}
 }
+
+func TestParseManifestWithColonInvalid(t *testing.T) {
+	yml := `
+src: s3://example.com/path/to/archive.tar.gz
+checksum: e0840daaa97cd2cf2175f9e5d133ffb3324a2b93
+dest: /home/stretcher/app
+commands:
+  success:
+    - some-commend-with-argument-includes-colon ":foo: bar"
+`
+	_, err := stretcher.ParseManifest([]byte(yml))
+	if err == nil {
+		t.Error("must be parse error")
+	}
+}
+
+func TestParseManifestWithColonValid(t *testing.T) {
+	yml := `
+src: s3://example.com/path/to/archive.tar.gz
+checksum: e0840daaa97cd2cf2175f9e5d133ffb3324a2b93
+dest: /home/stretcher/app
+commands:
+  success:
+    - 'some-commend-with-argument-includes-colon ":foo: bar"'
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(m.Commands.Success) != 1 {
+		t.Errorf("invalid commands.success")
+	}
+	if m.Commands.Success[0] != `some-commend-with-argument-includes-colon ":foo: bar"` {
+		t.Errorf("invalid commands.success[0]: %s", m.Commands.Success[0])
+	}
+}
