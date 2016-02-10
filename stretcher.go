@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/AdRoll/goamz/aws"
 	"github.com/AdRoll/goamz/s3"
@@ -22,13 +23,16 @@ var (
 	Version   string
 )
 
-func Init() {
+func Init(sleep time.Duration) {
 	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
+	log.Println("Starting up stretcher agent", Version)
+	if sleep > time.Duration(0) {
+		log.Printf("Sleeping %s", sleep)
+		time.Sleep(sleep)
+	}
 }
 
 func Run() error {
-	log.Println("Starting up stretcher agent", Version)
-
 	var err error
 	payload, err := parseEvents()
 	if err != nil {
