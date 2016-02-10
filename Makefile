@@ -3,8 +3,8 @@ DATE := $(shell date +%Y-%m-%dT%H:%M:%S%z)
 
 .PHONY: test local get-deps binary install clean
 
-cmd/stretcher/stretcher: aws.go command.go consul.go manifest.go stretcher.go
-	cd cmd/stretcher && go build -ldflags "-X main.version ${GIT_VER} -X main.buildDate ${DATE}" -gcflags="-trimpath=${PWD}"
+cmd/stretcher/stretcher: aws.go command.go consul.go manifest.go stretcher.go cmd/stretcher/main.go
+	cd cmd/stretcher && go build -ldflags "-X main.version=${GIT_VER} -X main.buildDate=${DATE}" -gcflags="-trimpath=${PWD}"
 
 install: cmd/stretcher/stretcher
 	install cmd/stretcher/stretcher ${GOPATH}/bin
