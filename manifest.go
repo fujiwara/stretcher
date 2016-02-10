@@ -90,7 +90,10 @@ func (m *Manifest) Deploy() error {
 		return err
 	}
 
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	if err = os.Chdir(dir); err != nil {
 		return err
 	}
@@ -159,7 +162,7 @@ func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (written int64,
 	for {
 		nr, er := src.Read(buf)
 		if nr > 0 {
-			io.WriteString(h, string(buf[0:nr]))
+			h.Write(buf[0:nr])
 			nw, ew := dst.Write(buf[0:nr])
 			if nw > 0 {
 				written += int64(nw)
