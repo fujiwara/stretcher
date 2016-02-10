@@ -28,6 +28,16 @@ excludes:
 
 ### stretcher agent
 
+```
+$ stretcher -h
+Usage of stretcher:
+  -random-delay float
+        sleep [0,random-delay) sec on start
+  -v	show version
+  -version
+        show version
+```
+
 #### with Consul
 
 A stretcher agent is designed as running under "consul watch" and will be kicked by [Consul](https://consul.io) event.
