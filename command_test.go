@@ -13,7 +13,7 @@ import (
 )
 
 func TestCommandLines(t *testing.T) {
-	stretcher.Init()
+	stretcher.Init(time.Duration(0))
 	now := time.Now()
 	ymd := now.Format("20060102")
 	hm := now.Format("1504")
@@ -32,7 +32,7 @@ func TestCommandLines(t *testing.T) {
 }
 
 func TestCommandLinesPipe(t *testing.T) {
-	stretcher.Init()
+	stretcher.Init(time.Duration(0))
 	var buf bytes.Buffer
 	for i := 0; i < 10; i++ {
 		buf.WriteString(fmt.Sprintf("foo%d\n", i))
@@ -61,7 +61,7 @@ func TestCommandLinesPipe(t *testing.T) {
 }
 
 func TestCommandLinesFail(t *testing.T) {
-	stretcher.Init()
+	stretcher.Init(time.Duration(0))
 	cmdlines := stretcher.CommandLines{
 		stretcher.CommandLine("echo 'FOO'; echo 'BAR' 2>&1; false"),
 	}
