@@ -59,6 +59,7 @@ func Run() error {
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println("Done")
 	return nil
 }
 

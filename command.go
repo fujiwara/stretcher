@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 )
 
 type Commands struct {
@@ -83,8 +84,10 @@ func (c CommandLine) InvokePipe(src io.Reader) error {
 	// src => cmd.stdin
 	go func() {
 		_, err := io.Copy(stdin, src)
-		if err != nil {
-			log.Println(err)
+		if e, ok := err.(*os.PathError); ok && e.Err == syscall.EPIPE {
+			// ignore EPIPE
+		} else if err != nil {
+			log.Println("failed to write to STDIN of", c.String(), ":", err)
 		}
 		stdin.Close()
 		wg.Done()
