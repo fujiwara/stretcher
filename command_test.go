@@ -80,3 +80,22 @@ func TestCommandLinesFail(t *testing.T) {
 		t.Error("output does not contain BAR\\n")
 	}
 }
+
+func TestCommandLinesPipeIgnoreEPIPE(t *testing.T) {
+	stretcher.Init(time.Duration(0))
+	var buf bytes.Buffer
+	for i := 0; i < 1025; i++ {
+		buf.WriteString("0123456789012345678901234567890123456789012345678901234567890123") // 64 bytes
+	}
+	cmdlines := stretcher.CommandLines{
+		stretcher.CommandLine("echo ok"),
+	}
+
+	err := cmdlines.InvokePipe(&buf)
+	if err != nil {
+		t.Error(err)
+	}
+	if strings.Index(stretcher.LogBuffer.String(), "broken pipe") != -1 {
+		t.Error("broken pipe was occuered")
+	}
+}
