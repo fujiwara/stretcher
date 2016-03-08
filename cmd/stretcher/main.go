@@ -1,14 +1,11 @@
 package main
 
 import (
-	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
-	"math/big"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/fujiwara/stretcher"
 	"github.com/tcnksm/go-latest"
@@ -23,7 +20,6 @@ func main() {
 	var (
 		showVersion bool
 		delay       float64
-		sleep       time.Duration
 	)
 	flag.BoolVar(&showVersion, "v", false, "show version")
 	flag.BoolVar(&showVersion, "version", false, "show version")
@@ -37,16 +33,8 @@ func main() {
 		return
 	}
 	log.Println("stretcher version:", version)
-
-	if delay > 0 {
-		n, err := rand.Int(rand.Reader, big.NewInt(int64(delay*1000)))
-		if err != nil {
-			panic(err)
-		}
-		sleep, _ = time.ParseDuration(fmt.Sprintf("%dms", n.Int64()))
-	}
 	stretcher.Version = version
-	stretcher.Init(sleep)
+	stretcher.Init(stretcher.RandomTime(delay))
 	err := stretcher.Run()
 	if err != nil {
 		log.Println(err)

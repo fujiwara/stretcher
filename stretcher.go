@@ -3,10 +3,13 @@ package stretcher
 import (
 	"bufio"
 	"bytes"
+	crand "crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	mrand "math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,10 +26,26 @@ var (
 	Version   string
 )
 
+const Nanoseconds = 1000 * 1000 * 1000
+
+func RandomTime(delay float64) time.Duration {
+	if delay <= 0 {
+		return time.Duration(0)
+	}
+	// http://stackoverflow.com/questions/6181260/generating-random-numbers-in-go
+	var s int64
+	if err := binary.Read(crand.Reader, binary.LittleEndian, &s); err != nil {
+		s = time.Now().UnixNano()
+	}
+	mrand.Seed(s)
+	n := mrand.Int63n(int64(delay * Nanoseconds))
+	return time.Duration(n)
+}
+
 func Init(sleep time.Duration) {
 	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
 	log.Println("Starting up stretcher agent", Version)
-	if sleep > time.Duration(0) {
+	if sleep > 0 {
 		log.Printf("Sleeping %s", sleep)
 		time.Sleep(sleep)
 	}
