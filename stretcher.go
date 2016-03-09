@@ -53,13 +53,13 @@ func Init(sleep time.Duration) {
 
 func Run() error {
 	var err error
-	payload, err := parseEvents()
+	manifestURL, err := parseEvents()
 	if err != nil {
 		return fmt.Errorf("Could not parse event: %s", err)
 	}
 
-	log.Println("Loading manifest:", payload)
-	m, err := getManifest(payload)
+	log.Println("Loading manifest:", manifestURL)
+	m, err := getManifest(manifestURL)
 	if err != nil {
 		return fmt.Errorf("Load manifest failed: %s", err)
 	}
