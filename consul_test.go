@@ -36,7 +36,7 @@ var ConsulInput2 = `
 func TestParseConsulEvents1(t *testing.T) {
 	in := bytes.NewReader([]byte(ConsulInput1))
 	ev, err := stretcher.ParseConsulEvents(in)
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 	if ev != nil {

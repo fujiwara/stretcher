@@ -3,6 +3,7 @@ package stretcher
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 )
@@ -31,7 +32,7 @@ func ParseConsulEvents(in io.Reader) (*ConsulEvent, error) {
 		return nil, err
 	}
 	if len(evs) == 0 {
-		return nil, nil
+		return nil, fmt.Errorf("No Consul events found")
 	}
 	ev := &evs[len(evs)-1]
 	log.Println("Consul event ID:", ev.ID)

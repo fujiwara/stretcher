@@ -152,15 +152,16 @@ func getManifest(manifestURL string) (*Manifest, error) {
 
 func parseEvents() (string, error) {
 	log.Println("Waiting for events from STDIN...")
-	if os.Getenv("CONSUL_INDEX") != "" {
+	reader := bufio.NewReader(os.Stdin)
+	b, err := reader.Peek(1)
+	if err != nil {
+		return "", err
+	}
+	if os.Getenv("CONSUL_INDEX") != "" || string(b) == "[" {
 		log.Println("Reading Consul event")
-		ev, err := ParseConsulEvents(os.Stdin)
+		ev, err := ParseConsulEvents(reader)
 		if err != nil {
 			return "", err
-		}
-		if ev == nil {
-			// no event
-			return "", fmt.Errorf("No Consul events found")
 		}
 		return ev.PayloadString(), nil
 	} else {
@@ -168,10 +169,7 @@ func parseEvents() (string, error) {
 			log.Println("Reading Serf user event:", userEvent)
 		}
 		// event passed by stdin (raw string)
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			return scanner.Text(), nil
-		}
-		return "", scanner.Err()
+		line, _, err := reader.ReadLine()
+		return string(line), err
 	}
 }
