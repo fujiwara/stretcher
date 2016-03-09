@@ -9,21 +9,31 @@ import (
 )
 
 type ConsulEvent struct {
-	ID      string `json:"ID"`
-	Name    string `json:"Name"`
-	Payload string `json:"Payload"`
-	LTime   int    `json:"LTime"`
-}
-
-func (ev ConsulEvent) PayloadString() string {
-	raw, err := base64.StdEncoding.DecodeString(ev.Payload)
-	if err != nil {
-		return ""
-	}
-	return string(raw)
+	ID      string  `json:"ID"`
+	Name    string  `json:"Name"`
+	Payload Payload `json:"Payload"`
+	LTime   int     `json:"LTime"`
 }
 
 type ConsulEvents []ConsulEvent
+
+type Payload struct {
+	string
+}
+
+func (p Payload) String() string {
+	return p.string
+}
+
+func (p *Payload) UnmarshalText(src []byte) error {
+	b := make([]byte, len(src))
+	n, err := base64.StdEncoding.Decode(b, src)
+	if err != nil {
+		return err
+	}
+	p.string = string(b[0:n])
+	return nil
+}
 
 func ParseConsulEvents(in io.Reader) (*ConsulEvent, error) {
 	var evs ConsulEvents
