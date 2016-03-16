@@ -36,7 +36,7 @@ var ConsulInput2 = `
 func TestParseConsulEvents1(t *testing.T) {
 	in := bytes.NewReader([]byte(ConsulInput1))
 	ev, err := stretcher.ParseConsulEvents(in)
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 	if ev != nil {
@@ -56,7 +56,7 @@ func TestParseConsulEvents2(t *testing.T) {
 	if ev.Name != "deploy" {
 		t.Error("invalid Name")
 	}
-	if ev.PayloadString() != "s3://example.com/path/to/app.tar.gz" {
-		t.Error("invalid PayloadString()", ev.PayloadString())
+	if ev.Payload.String() != "s3://example.com/path/to/app.tar.gz" {
+		t.Errorf("invalid Payload %s", ev.Payload.String())
 	}
 }
