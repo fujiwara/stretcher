@@ -163,7 +163,7 @@ func parseEvents() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return ev.Payload.String(), nil
+		return string(ev.Payload), nil
 	} else {
 		if userEvent := os.Getenv("SERF_USER_EVENT"); userEvent != "" {
 			log.Println("Reading Serf user event:", userEvent)

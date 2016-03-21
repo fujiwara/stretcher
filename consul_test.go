@@ -56,7 +56,7 @@ func TestParseConsulEvents2(t *testing.T) {
 	if ev.Name != "deploy" {
 		t.Error("invalid Name")
 	}
-	if ev.Payload.String() != "s3://example.com/path/to/app.tar.gz" {
-		t.Errorf("invalid Payload %s", ev.Payload.String())
+	if string(ev.Payload) != "s3://example.com/path/to/app.tar.gz" {
+		t.Errorf("invalid Payload %s", string(ev.Payload))
 	}
 }
