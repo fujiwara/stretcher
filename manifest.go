@@ -159,7 +159,7 @@ func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (written int64,
 		return int64(0), "", err
 	}
 	w := io.MultiWriter(h, dst)
-	io.Copy(w, src)
+	err = io.Copy(w, src)
 
 	s := fmt.Sprintf("%x", h.Sum(nil))
 	return written, s, err
