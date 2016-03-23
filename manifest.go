@@ -153,42 +153,14 @@ func (m *Manifest) Deploy() error {
 	return nil
 }
 
-//
-// copyAndCalcHash() is based on io.copyBuffer()
-//   https://golang.org/src/io/io.go
-// Copyright 2009 The Go Authors. All rights reserved.
-//
 func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (written int64, sum string, err error) {
 	h, err := m.newHash()
 	if err != nil {
 		return int64(0), "", err
 	}
-	buf := make([]byte, 32*1024)
-	for {
-		nr, er := src.Read(buf)
-		if nr > 0 {
-			h.Write(buf[0:nr])
-			nw, ew := dst.Write(buf[0:nr])
-			if nw > 0 {
-				written += int64(nw)
-			}
-			if ew != nil {
-				err = ew
-				break
-			}
-			if nr != nw {
-				err = io.ErrShortWrite
-				break
-			}
-		}
-		if er == io.EOF {
-			break
-		}
-		if er != nil {
-			err = er
-			break
-		}
-	}
+	w := io.MultiWriter(h, dst)
+	written, err = io.Copy(w, src)
+
 	s := fmt.Sprintf("%x", h.Sum(nil))
 	return written, s, err
 }
