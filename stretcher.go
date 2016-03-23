@@ -94,19 +94,11 @@ func getS3(u *url.URL) (io.ReadCloser, error) {
 	}
 	client := s3.New(AWSAuth, AWSRegion)
 	bucket := client.Bucket(u.Host)
-	rc, err := bucket.GetReader(u.Path)
-	if err != nil {
-		return nil, err
-	}
-	return rc, nil
+	return bucket.GetReader(u.Path)
 }
 
 func getFile(u *url.URL) (io.ReadCloser, error) {
-	file, err := os.Open(u.Path)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+	return os.Open(u.Path)
 }
 
 func getHTTP(u *url.URL) (io.ReadCloser, error) {
