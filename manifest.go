@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/fujiwara/shapeio"
 	"gopkg.in/yaml.v2"
 )
 
@@ -51,9 +52,15 @@ func (m *Manifest) Deploy() error {
 	begin := time.Now()
 	src, err := getURL(m.Src)
 	if err != nil {
-		return fmt.Errorf("Get src failed:", err)
+		return fmt.Errorf("Get src failed: %s", err)
 	}
 	defer src.Close()
+
+	lsrc := shapeio.NewReader(src)
+	if MaxBandWidth != 0 {
+		log.Printf("Set max bandwidth %s/sec", humanize.Bytes(uint64(MaxBandWidth)))
+		lsrc.SetRateLimit(float64(MaxBandWidth))
+	}
 
 	tmp, err := ioutil.TempFile(os.TempDir(), "stretcher")
 	if err != nil {
@@ -61,7 +68,7 @@ func (m *Manifest) Deploy() error {
 	}
 	defer os.Remove(tmp.Name())
 
-	written, sum, err := m.copyAndCalcHash(tmp, src)
+	written, sum, err := m.copyAndCalcHash(tmp, lsrc)
 	tmp.Close()
 	if err != nil {
 		return err
@@ -156,7 +163,7 @@ func (m *Manifest) Deploy() error {
 func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (written int64, sum string, err error) {
 	h, err := m.newHash()
 	if err != nil {
-		return int64(0), "", err
+		return 0, "", err
 	}
 	w := io.MultiWriter(h, dst)
 	written, err = io.Copy(w, src)

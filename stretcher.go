@@ -20,10 +20,11 @@ import (
 )
 
 var (
-	AWSAuth   aws.Auth
-	AWSRegion aws.Region
-	LogBuffer bytes.Buffer
-	Version   string
+	AWSAuth      aws.Auth
+	AWSRegion    aws.Region
+	LogBuffer    bytes.Buffer
+	Version      string
+	MaxBandWidth uint64
 )
 
 const Nanoseconds = 1000 * 1000 * 1000
