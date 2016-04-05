@@ -35,11 +35,15 @@ func main() {
 		checkLatest(version)
 		return
 	}
-	log.Println("stretcher version:", version)
-	stretcher.Version = version
-	if bw, err := humanize.ParseBytes(maxBandWidth); err == nil {
+	if bw, err := humanize.ParseBytes(maxBandWidth); err != nil {
+		fmt.Println("Cannot parse -max-bandwidth", err)
+		os.Exit(1)
+	} else {
 		stretcher.MaxBandWidth = bw
 	}
+
+	log.Println("stretcher version:", version)
+	stretcher.Version = version
 	stretcher.Init(stretcher.RandomTime(delay))
 	err := stretcher.Run()
 	if err != nil {
