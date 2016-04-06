@@ -170,7 +170,7 @@ func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
 	if err != nil {
 		return err
 	}
-	duration := float64(time.Now().Sub(begin).Nanoseconds()) / 1000000000
+	duration := float64(time.Now().Sub(begin).Nanoseconds()) / Nanoseconds
 	log.Printf("Wrote %s bytes to %s (in %s sec, %s/s)",
 		humanize.Comma(written),
 		tmp.Name(),
