@@ -170,12 +170,12 @@ func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
 	if err != nil {
 		return err
 	}
-	duration := float64(time.Now().Sub(begin).Nanoseconds()) / Nanoseconds
-	log.Printf("Wrote %s bytes to %s (in %s sec, %s/s)",
+	elapsed := time.Since(begin)
+	log.Printf("Wrote %s bytes to %s (in %s, %s/s)",
 		humanize.Comma(written),
 		tmp.Name(),
-		humanize.Ftoa(duration),
-		humanize.Bytes(uint64(float64(written)/duration)),
+		elapsed,
+		humanize.Bytes(uint64(float64(written)/elapsed.Seconds())),
 	)
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
 		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
