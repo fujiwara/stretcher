@@ -31,8 +31,12 @@ excludes:
 ```
 $ stretcher -h
 Usage of stretcher:
+  -max-bandwidth string
+        max bandwidth for download src archives (Bytes/sec)
   -random-delay float
         sleep [0,random-delay) sec on start
+  -timeout int
+    	timeout for download src archives (sec)
   -v	show version
   -version
         show version
