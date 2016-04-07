@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/fujiwara/shapeio"
 	"gopkg.in/yaml.v2"
 )
 
@@ -47,36 +48,34 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 	}
 }
 
-func (m *Manifest) Deploy() error {
-	begin := time.Now()
-	src, err := getURL(m.Src)
-	if err != nil {
-		return fmt.Errorf("Get src failed:", err)
-	}
-	defer src.Close()
-
+func (m *Manifest) Deploy(conf Config) error {
 	tmp, err := ioutil.TempFile(os.TempDir(), "stretcher")
 	if err != nil {
 		return err
 	}
+	defer tmp.Close()
 	defer os.Remove(tmp.Name())
 
-	written, sum, err := m.copyAndCalcHash(tmp, src)
-	tmp.Close()
-	if err != nil {
-		return err
-	}
-	duration := float64(time.Now().Sub(begin).Nanoseconds()) / 1000000000
-	log.Printf("Wrote %s bytes to %s (in %s sec, %s/s)",
-		humanize.Comma(written),
-		tmp.Name(),
-		humanize.Ftoa(duration),
-		humanize.Bytes(uint64(float64(written)/duration)),
-	)
-	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
-		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
+	if conf.Timeout != 0 {
+		log.Printf("Set timeout %s", conf.Timeout)
+		timer := time.NewTimer(conf.Timeout)
+		done := make(chan error)
+		go func() {
+			done <- m.fetchSrc(conf, tmp)
+		}()
+		select {
+		case <-timer.C:
+			return fmt.Errorf("timeout %s reached while fetching src %s", conf.Timeout, m.Src)
+		case err := <-done:
+			if err != nil {
+				return err
+			}
+		}
 	} else {
-		log.Printf("Checksum ok: %s", sum)
+		err := m.fetchSrc(conf, tmp)
+		if err != nil {
+			return err
+		}
 	}
 
 	dir, err := ioutil.TempDir(os.TempDir(), "stretcher_src")
@@ -153,14 +152,50 @@ func (m *Manifest) Deploy() error {
 	return nil
 }
 
-func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (written int64, sum string, err error) {
+func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
+	begin := time.Now()
+	src, err := getURL(m.Src)
+	if err != nil {
+		return fmt.Errorf("Get src failed: %s", err)
+	}
+	defer src.Close()
+
+	lsrc := shapeio.NewReader(src)
+	if conf.MaxBandWidth != 0 {
+		log.Printf("Set max bandwidth %s/sec", humanize.Bytes(uint64(conf.MaxBandWidth)))
+		lsrc.SetRateLimit(float64(conf.MaxBandWidth))
+	}
+
+	written, sum, err := m.copyAndCalcHash(tmp, lsrc)
+	if err != nil {
+		return err
+	}
+	elapsed := time.Since(begin)
+	log.Printf("Wrote %s bytes to %s (in %s, %s/s)",
+		humanize.Comma(written),
+		tmp.Name(),
+		elapsed,
+		humanize.Bytes(uint64(float64(written)/elapsed.Seconds())),
+	)
+	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
+		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
+	} else {
+		log.Printf("Checksum ok: %s", sum)
+	}
+	return nil
+}
+
+func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (int64, string, error) {
 	h, err := m.newHash()
 	if err != nil {
-		return int64(0), "", err
+		return 0, "", err
 	}
 	w := io.MultiWriter(h, dst)
-	written, err = io.Copy(w, src)
 
+	written, err := io.Copy(w, src)
+	if err != nil {
+		return written, "", err
+	}
 	s := fmt.Sprintf("%x", h.Sum(nil))
 	return written, s, err
 }

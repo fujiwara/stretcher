@@ -26,7 +26,18 @@ var (
 	Version   string
 )
 
+type Config struct {
+	MaxBandWidth uint64
+	Timeout      time.Duration
+	InitSleep    time.Duration
+}
+
 const Nanoseconds = 1000 * 1000 * 1000
+
+func Init() {
+	LogBuffer.Reset()
+	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
+}
 
 func RandomTime(delay float64) time.Duration {
 	if delay <= 0 {
@@ -42,17 +53,14 @@ func RandomTime(delay float64) time.Duration {
 	return time.Duration(n)
 }
 
-func Init(sleep time.Duration) {
-	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
-	log.Println("Starting up stretcher agent", Version)
-	if sleep > 0 {
-		log.Printf("Sleeping %s", sleep)
-		time.Sleep(sleep)
-	}
-}
-
-func Run() error {
+func Run(conf Config) error {
 	var err error
+	log.Println("Starting up stretcher agent", Version)
+	if conf.InitSleep > 0 {
+		log.Printf("Sleeping %s", conf.InitSleep)
+		time.Sleep(conf.InitSleep)
+	}
+
 	manifestURL, err := parseEvents()
 	if err != nil {
 		return fmt.Errorf("Could not parse event: %s", err)
@@ -65,7 +73,7 @@ func Run() error {
 	}
 	log.Printf("Executing manifest %#v", m)
 
-	err = m.Deploy()
+	err = m.Deploy(conf)
 	if err != nil {
 		log.Println("Deploy manifest failed:", err)
 		if ferr := m.Commands.Failure.InvokePipe(&LogBuffer); ferr != nil {

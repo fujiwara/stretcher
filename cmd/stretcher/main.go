@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/fujiwara/stretcher"
 	"github.com/tcnksm/go-latest"
 )
@@ -18,12 +20,16 @@ var (
 
 func main() {
 	var (
-		showVersion bool
-		delay       float64
+		showVersion  bool
+		delay        float64
+		maxBandWidth string
+		timeout      int64
 	)
 	flag.BoolVar(&showVersion, "v", false, "show version")
 	flag.BoolVar(&showVersion, "version", false, "show version")
 	flag.Float64Var(&delay, "random-delay", 0, "sleep [0,random-delay) sec on start")
+	flag.StringVar(&maxBandWidth, "max-bandwidth", "", "max bandwidth for download src archives (Bytes/sec)")
+	flag.Int64Var(&timeout, "timeout", 0, "timeout for download src archives (sec)")
 	flag.Parse()
 
 	if showVersion {
@@ -32,10 +38,24 @@ func main() {
 		checkLatest(version)
 		return
 	}
+
+	conf := stretcher.Config{
+		InitSleep: stretcher.RandomTime(delay),
+		Timeout:   time.Duration(timeout * int64(time.Second)),
+	}
+	if maxBandWidth != "" {
+		if bw, err := humanize.ParseBytes(maxBandWidth); err != nil {
+			fmt.Println("Cannot parse -max-bandwidth", err)
+			os.Exit(1)
+		} else {
+			conf.MaxBandWidth = bw
+		}
+	}
+
 	log.Println("stretcher version:", version)
 	stretcher.Version = version
-	stretcher.Init(stretcher.RandomTime(delay))
-	err := stretcher.Run()
+	stretcher.Init()
+	err := stretcher.Run(conf)
 	if err != nil {
 		log.Println(err)
 		if os.Getenv("CONSUL_INDEX") != "" {

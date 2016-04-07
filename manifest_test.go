@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/fujiwara/stretcher"
 )
@@ -72,7 +74,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy()
+	err = m.Deploy(stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -121,7 +123,7 @@ excludes:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy()
+	err = m.Deploy(stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -161,7 +163,7 @@ exclude_from: exclude.txt
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy()
+	err = m.Deploy(stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -194,7 +196,7 @@ dest_mode: 0711
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy()
+	err = m.Deploy(stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -241,5 +243,71 @@ commands:
 	}
 	if m.Commands.Success[0] != `some-commend-with-argument-includes-colon ":foo: bar"` {
 		t.Errorf("invalid commands.success[0]: %s", m.Commands.Success[0])
+	}
+}
+
+func TestDeployManifestTimeout(t *testing.T) {
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	testDest := _testDest.Name()
+	os.Remove(testDest)
+	os.Mkdir(testDest, 0755)
+	defer os.RemoveAll(testDest)
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test.tar
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
+dest: ` + testDest + `
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	stat, err := os.Stat(cwd + "/test/test.tar")
+	if err != nil {
+		t.Error(err)
+	}
+	// download will be finished in about 5 seconds
+	bw := uint64(stat.Size()) / 5
+	err = m.Deploy(stretcher.Config{
+		MaxBandWidth: bw,
+		Timeout:      time.Duration(2 * time.Second),
+	})
+	if err == nil || strings.Index(err.Error(), "timeout") == -1 {
+		t.Errorf("expect timeout got %s", err)
+	}
+}
+
+func TestDeployManifestMaxBandwidth(t *testing.T) {
+	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	testDest := _testDest.Name()
+	os.Remove(testDest)
+	os.Mkdir(testDest, 0755)
+	defer os.RemoveAll(testDest)
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test.tar
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
+dest: ` + testDest + `
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	stat, err := os.Stat(cwd + "/test/test.tar")
+	if err != nil {
+		t.Error(err)
+	}
+	// expect to download in about 2 second
+	bw := uint64(stat.Size()) / 2
+	start := time.Now()
+	err = m.Deploy(stretcher.Config{
+		MaxBandWidth: bw,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	elapsed := time.Since(start)
+	if elapsed.Seconds() < 1 || 4 < elapsed.Seconds() {
+		t.Error("elapsed expecct abount 2 sec. but %s", elapsed)
 	}
 }
