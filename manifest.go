@@ -20,7 +20,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var RsyncDefaultOpts = []string{"-av", "--delete"}
 var DefaultDestMode = os.FileMode(0755)
 
 type Manifest struct {
@@ -120,23 +119,8 @@ func (m *Manifest) Deploy(conf Config) error {
 		to = to + "/"
 	}
 
-	args := []string{}
-	args = append(args, RsyncDefaultOpts...)
-	if m.ExcludeFrom != "" {
-		args = append(args, "--exclude-from", from+m.ExcludeFrom)
-	}
-	if len(m.Excludes) > 0 {
-		for _, ex := range m.Excludes {
-			args = append(args, "--exclude", ex)
-		}
-	}
-	args = append(args, from, to)
-
-	log.Println("rsync", args)
-	out, err = exec.Command("rsync", args...).CombinedOutput()
-	if len(out) > 0 {
-		log.Println(string(out))
-	}
+	strategy := &RsyncStrategy{Manifest: m}
+	err = strategy.Sync(from, to)
 	if err != nil {
 		return err
 	}
