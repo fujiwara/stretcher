@@ -114,10 +114,6 @@ func (m *Manifest) Deploy(conf Config) error {
 
 	from := dir + "/"
 	to := m.Dest
-	// append "/" when not terminated by "/"
-	if strings.LastIndex(to, "/") != len(to)-1 {
-		to = to + "/"
-	}
 
 	strategy := &RsyncStrategy{Manifest: m}
 	err = strategy.Sync(from, to)

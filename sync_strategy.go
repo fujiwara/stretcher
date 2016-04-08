@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type SyncStrategy interface {
@@ -18,6 +19,11 @@ var RsyncDefaultOpts = []string{"-av", "--delete"}
 
 func (s *RsyncStrategy) Sync(from, to string) error {
 	m := s.Manifest
+
+	// append "/" when not terminated by "/"
+	if strings.LastIndex(to, "/") != len(to)-1 {
+		to = to + "/"
+	}
 
 	args := []string{}
 	args = append(args, RsyncDefaultOpts...)
