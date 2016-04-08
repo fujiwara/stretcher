@@ -1,6 +1,7 @@
 package stretcher
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -16,6 +17,20 @@ type RsyncStrategy struct {
 }
 
 var RsyncDefaultOpts = []string{"-av", "--delete"}
+
+func NewSyncStrategy(m *Manifest) (SyncStrategy, error) {
+	switch m.SyncStrategy {
+	case "":
+		// default to Rsync
+		return &RsyncStrategy{Manifest: m}, nil
+	case "rsync":
+		return &RsyncStrategy{Manifest: m}, nil
+	case "mv":
+		return &MvSyncStrategy{}, nil
+	default:
+		return nil, fmt.Errorf("Invalid strategy name: %s", m.SyncStrategy)
+	}
+}
 
 func (s *RsyncStrategy) Sync(from, to string) error {
 	m := s.Manifest

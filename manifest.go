@@ -23,13 +23,14 @@ import (
 var DefaultDestMode = os.FileMode(0755)
 
 type Manifest struct {
-	Src         string       `yaml:"src"`
-	CheckSum    string       `yaml:"checksum"`
-	Dest        string       `yaml:"dest"`
-	DestMode    *os.FileMode `yaml:"dest_mode"`
-	Commands    Commands     `yaml:"commands"`
-	Excludes    []string     `yaml:"excludes"`
-	ExcludeFrom string       `yaml:"exclude_from"`
+	Src          string       `yaml:"src"`
+	CheckSum     string       `yaml:"checksum"`
+	Dest         string       `yaml:"dest"`
+	DestMode     *os.FileMode `yaml:"dest_mode"`
+	Commands     Commands     `yaml:"commands"`
+	Excludes     []string     `yaml:"excludes"`
+	ExcludeFrom  string       `yaml:"exclude_from"`
+	SyncStrategy string       `yaml:"sync_strategy"`
 }
 
 func (m *Manifest) newHash() (hash.Hash, error) {
@@ -115,7 +116,11 @@ func (m *Manifest) Deploy(conf Config) error {
 	from := dir + "/"
 	to := m.Dest
 
-	strategy := &RsyncStrategy{Manifest: m}
+	strategy, err := NewSyncStrategy(m)
+	if err != nil {
+		return err
+	}
+
 	err = strategy.Sync(from, to)
 	if err != nil {
 		return err
