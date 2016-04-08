@@ -228,7 +228,7 @@ A strategy for syncing src extracted directory to dest directory.
 - `rsync`: Default
   - Use rsync(1) command with option `-av --delete`
 - `mv`
-  - Use mv(1) command
+  - Use `os.Rename()` of Golang.
   - Deployment will be failed if `dest` directory is already exists.
 
 ## Requirements
