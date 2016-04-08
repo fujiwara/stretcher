@@ -20,17 +20,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var RsyncDefaultOpts = []string{"-av", "--delete"}
 var DefaultDestMode = os.FileMode(0755)
 
 type Manifest struct {
-	Src         string       `yaml:"src"`
-	CheckSum    string       `yaml:"checksum"`
-	Dest        string       `yaml:"dest"`
-	DestMode    *os.FileMode `yaml:"dest_mode"`
-	Commands    Commands     `yaml:"commands"`
-	Excludes    []string     `yaml:"excludes"`
-	ExcludeFrom string       `yaml:"exclude_from"`
+	Src          string       `yaml:"src"`
+	CheckSum     string       `yaml:"checksum"`
+	Dest         string       `yaml:"dest"`
+	DestMode     *os.FileMode `yaml:"dest_mode"`
+	Commands     Commands     `yaml:"commands"`
+	Excludes     []string     `yaml:"excludes"`
+	ExcludeFrom  string       `yaml:"exclude_from"`
+	SyncStrategy string       `yaml:"sync_strategy"`
 }
 
 func (m *Manifest) newHash() (hash.Hash, error) {
@@ -115,28 +115,13 @@ func (m *Manifest) Deploy(conf Config) error {
 
 	from := dir + "/"
 	to := m.Dest
-	// append "/" when not terminated by "/"
-	if strings.LastIndex(to, "/") != len(to)-1 {
-		to = to + "/"
+
+	strategy, err := NewSyncStrategy(m)
+	if err != nil {
+		return err
 	}
 
-	args := []string{}
-	args = append(args, RsyncDefaultOpts...)
-	if m.ExcludeFrom != "" {
-		args = append(args, "--exclude-from", from+m.ExcludeFrom)
-	}
-	if len(m.Excludes) > 0 {
-		for _, ex := range m.Excludes {
-			args = append(args, "--exclude", ex)
-		}
-	}
-	args = append(args, from, to)
-
-	log.Println("rsync", args)
-	out, err = exec.Command("rsync", args...).CombinedOutput()
-	if len(out) > 0 {
-		log.Println(string(out))
-	}
+	err = strategy.Sync(from, to)
 	if err != nil {
 		return err
 	}
