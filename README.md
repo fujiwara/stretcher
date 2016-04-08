@@ -129,7 +129,8 @@ A stretcher agent executes a following process.
 4. Invoke `pre` commands.
 5. Extract `src` archive to a temporary directory.
 6. Sync files from extracted archive to `dest` directory.
-  - use `rsync -a --delete`
+  - use `rsync -a --delete` or `mv`
+  - sync strategy is switched by `sync_strategy`
 7. Invoke `post` commands.
 8.
   - Invoke `success` commands when the deployment process succeeded.
@@ -219,6 +220,16 @@ The file must be included in `src` archive.
 ```yml
 exclude_from: exclude.list
 ```
+
+### `sync_strategy`
+
+A strategy for syncing src extracted directory to dest directory.
+
+- `rsync`: Default
+  - Use rsync(1) command with option `-a -v`
+- `mv`
+  - Use mv(1) command
+  - Deployment will be failed if `dest` directory is already exists.
 
 ## Requirements
 
