@@ -20,15 +20,13 @@ var RsyncDefaultOpts = []string{"-av", "--delete"}
 
 func NewSyncStrategy(m *Manifest) (SyncStrategy, error) {
 	switch m.SyncStrategy {
-	case "":
+	case "", "rsync":
 		// default to Rsync
-		return &RsyncStrategy{Manifest: m}, nil
-	case "rsync":
 		return &RsyncStrategy{Manifest: m}, nil
 	case "mv":
 		return &MvSyncStrategy{}, nil
 	default:
-		return nil, fmt.Errorf("Invalid strategy name: %s", m.SyncStrategy)
+		return nil, fmt.Errorf("invalid strategy name: %s", m.SyncStrategy)
 	}
 }
 

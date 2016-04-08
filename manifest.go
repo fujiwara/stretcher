@@ -49,6 +49,11 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 }
 
 func (m *Manifest) Deploy(conf Config) error {
+	strategy, err := NewSyncStrategy(m)
+	if err != nil {
+		return err
+	}
+
 	tmp, err := ioutil.TempFile(os.TempDir(), "stretcher")
 	if err != nil {
 		return err
@@ -115,11 +120,6 @@ func (m *Manifest) Deploy(conf Config) error {
 
 	from := dir + "/"
 	to := m.Dest
-
-	strategy, err := NewSyncStrategy(m)
-	if err != nil {
-		return err
-	}
 
 	err = strategy.Sync(from, to)
 	if err != nil {
