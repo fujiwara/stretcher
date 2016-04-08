@@ -2,6 +2,7 @@ package stretcher
 
 import (
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -40,4 +41,12 @@ func (s *RsyncStrategy) Sync(from, to string) error {
 	}
 
 	return nil
+}
+
+type MvSyncStrategy struct {
+}
+
+func (s *MvSyncStrategy) Sync(from, to string) error {
+	log.Printf("Rename srcdir %s to dest %s\n", from, to)
+	return os.Rename(from, to)
 }
