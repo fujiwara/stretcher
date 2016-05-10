@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/AdRoll/goamz/aws"
@@ -169,7 +170,7 @@ func parseEvents() (string, error) {
 			log.Println("Reading Serf user event:", userEvent)
 		}
 		// event passed by stdin (raw string)
-		line, _, err := reader.ReadLine()
-		return string(line), err
+		line, err := reader.ReadString('\n')
+		return strings.Trim(line, "\n"), err
 	}
 }
