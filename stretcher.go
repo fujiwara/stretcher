@@ -35,8 +35,7 @@ type Config struct {
 
 const Nanoseconds = 1000 * 1000 * 1000
 
-func Init() {
-	LogBuffer.Reset()
+func init() {
 	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
 }
 
