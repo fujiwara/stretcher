@@ -48,7 +48,21 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 	}
 }
 
+func (m *Manifest) runCommands() error {
+	if err := m.Commands.Pre.Invoke(); err != nil {
+		return err
+	}
+	if err := m.Commands.Post.Invoke(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Manifest) Deploy(conf Config) error {
+	if m.Src == "" {
+		return m.runCommands()
+	}
+
 	strategy, err := NewSyncStrategy(m)
 	if err != nil {
 		return err
@@ -190,10 +204,7 @@ func ParseManifest(data []byte) (*Manifest, error) {
 	if err := yaml.Unmarshal(data, m); err != nil {
 		return nil, err
 	}
-	if m.Src == "" {
-		return nil, fmt.Errorf("Src is required")
-	}
-	if m.Dest == "" {
+	if m.Src != "" && m.Dest == "" {
 		return nil, fmt.Errorf("Dest is required")
 	}
 	if m.DestMode == nil {
