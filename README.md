@@ -241,6 +241,10 @@ tar and rsync must be exist in PATH environment.
 If you use stretcher under systemd, You can see unfinished stdout with journald.
 You should add `RateLimitBurst=0` into `/etc/systemd/journald.conf` for getting stdout completely.
 
+## Commands execution only mode
+
+If `src` is not defined in a manifest, Stretcher runs `pre`/`post` and `success`/`failure` commands simply.
+
 ## LICENSE
 
 The MIT License (MIT)

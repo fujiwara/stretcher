@@ -432,3 +432,43 @@ dest: ` + testDest + `
 		t.Error("elapsed expecct abount 2 sec. but %s", elapsed)
 	}
 }
+
+func TestDeployCommandsSuccess(t *testing.T) {
+	yml := `
+commands:
+  pre:
+    - 'echo "pre 1"'
+    - 'echo "pre 2"'
+  post:
+    - 'echo "post 1"'
+    - 'echo "post 2"'
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(stretcher.Config{})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDeployCommandsFail(t *testing.T) {
+	yml := `
+commands:
+  pre:
+    - 'echo "pre 1"'
+    - exit 1
+  post:
+    - 'echo "post 1"'
+    - 'echo "post 2"'
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(stretcher.Config{})
+	if err == nil {
+		t.Error(err)
+	}
+}
