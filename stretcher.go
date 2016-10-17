@@ -31,6 +31,7 @@ type Config struct {
 	MaxBandWidth uint64
 	Timeout      time.Duration
 	InitSleep    time.Duration
+	Retry        int
 }
 
 const Nanoseconds = 1000 * 1000 * 1000

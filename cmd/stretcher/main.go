@@ -24,12 +24,14 @@ func main() {
 		delay        float64
 		maxBandWidth string
 		timeout      int64
+		retry        int
 	)
 	flag.BoolVar(&showVersion, "v", false, "show version")
 	flag.BoolVar(&showVersion, "version", false, "show version")
 	flag.Float64Var(&delay, "random-delay", 0, "sleep [0,random-delay) sec on start")
 	flag.StringVar(&maxBandWidth, "max-bandwidth", "", "max bandwidth for download src archives (Bytes/sec)")
 	flag.Int64Var(&timeout, "timeout", 0, "timeout for download src archives (sec)")
+	flag.IntVar(&retry, "retry", 0, "retry count for download src archives")
 	flag.Parse()
 
 	if showVersion {
@@ -42,6 +44,7 @@ func main() {
 	conf := stretcher.Config{
 		InitSleep: stretcher.RandomTime(delay),
 		Timeout:   time.Duration(timeout * int64(time.Second)),
+		Retry:     retry,
 	}
 	if maxBandWidth != "" {
 		if bw, err := humanize.ParseBytes(maxBandWidth); err != nil {
