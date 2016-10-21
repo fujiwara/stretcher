@@ -379,7 +379,8 @@ dest: ` + cwd + `/test/dest
 		t.Error(err)
 	}
 	err = m.Deploy(stretcher.Config{
-		Retry: 3,
+		Retry:     3,
+		RetryWait: 3 * time.Second,
 	})
 	if err == nil || strings.Index(err.Error(), "Get src failed:") == -1 {
 		t.Errorf("expect retry got %s", err)
