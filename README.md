@@ -35,9 +35,13 @@ Usage of stretcher:
         max bandwidth for download src archives (Bytes/sec)
   -random-delay float
         sleep [0,random-delay) sec on start
+  -retry int
+        retry count for download src archives
+  -retry-wait int
+        wait for retry download src archives (sec) (default 3)
   -timeout int
-    	timeout for download src archives (sec)
-  -v	show version
+        timeout for download src archives (sec)
+  -v    show version
   -version
         show version
 ```
