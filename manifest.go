@@ -155,7 +155,18 @@ func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
 	begin := time.Now()
 	src, err := getURL(m.Src)
 	if err != nil {
-		return fmt.Errorf("Get src failed: %s", err)
+		for i := 0; i < conf.Retry; i++ {
+			log.Printf("Get src failed: %s", err)
+			log.Printf("Try again. Waiting: %s", conf.RetryWait)
+			time.Sleep(conf.RetryWait)
+			src, err = getURL(m.Src)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("Get src failed: %s", err)
+		}
 	}
 	defer src.Close()
 

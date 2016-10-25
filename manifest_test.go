@@ -367,6 +367,26 @@ commands:
 	}
 }
 
+func TestDeployManifestRetry(t *testing.T) {
+	cwd, _ := os.Getwd()
+	yml := `
+src: file://` + cwd + `/test/test_not_exist_filepath
+checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
+dest: ` + cwd + `/test/dest
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(stretcher.Config{
+		Retry:     3,
+		RetryWait: 3 * time.Second,
+	})
+	if err == nil || strings.Index(err.Error(), "Get src failed:") == -1 {
+		t.Errorf("expect retry got %s", err)
+	}
+}
+
 func TestDeployManifestTimeout(t *testing.T) {
 	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
