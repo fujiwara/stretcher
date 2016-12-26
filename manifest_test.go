@@ -449,7 +449,7 @@ dest: ` + testDest + `
 	}
 	elapsed := time.Since(start)
 	if elapsed.Seconds() < 1 || 4 < elapsed.Seconds() {
-		t.Error("elapsed expecct abount 2 sec. but %s", elapsed)
+		t.Errorf("elapsed expecct abount 2 sec. but %s", elapsed)
 	}
 }
 
