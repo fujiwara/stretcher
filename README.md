@@ -253,4 +253,4 @@ If `src` is not defined in a manifest, Stretcher runs `pre`/`post` and `success`
 
 The MIT License (MIT)
 
-Copyright (c) 2014- FUJIWARA Shunichiro
+Copyright (c) 2014 FUJIWARA Shunichiro / (c) 2014 KAYAC Inc.
