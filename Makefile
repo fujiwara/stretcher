@@ -10,11 +10,14 @@ install: cmd/stretcher/stretcher
 	install cmd/stretcher/stretcher ${GOPATH}/bin
 
 test:
-	go test
+	go test -race
+
+get-dep-amd64:
+	wget -O ${GOPATH}/bin/dep https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64
+	chmod +x ${GOPATH}/bin/dep
 
 get-deps:
-	go get -t -d -v .
-	cd cmd/stretcher && go get -t -d -v .
+	dep ensure
 
 packages:
 	cd cmd/stretcher && gox -os="linux darwin" -arch="amd64 arm" -output "../../pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-w -s -X main.version=${GIT_VER} -X main.buildDate=${DATE}"
