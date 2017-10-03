@@ -13,7 +13,7 @@ test:
 	go test -race
 
 get-dep-amd64:
-	wget https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 > ${GOPATH}/bin/dep
+	wget -O ${GOPATH}/bin/dep https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64
 	chmod +x ${GOPATH}/bin/dep
 
 get-deps:
