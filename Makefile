@@ -12,8 +12,11 @@ install: cmd/stretcher/stretcher
 test:
 	go test -race
 
+get-dep-amd64:
+	wget https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 > ${GOPATH}/bin/dep
+	chmod +x ${GOPATH}/bin/dep
+
 get-deps:
-	go get -u github.com/golang/dep
 	dep ensure
 
 packages:

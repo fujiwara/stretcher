@@ -11,6 +11,7 @@ jobs:
       - checkout
       - run: sudo apt install -y rsync
       - run: make clean
+      - run: make get-dep-amd64
       - run: make get-deps
       - run: make test
       - run: make
