@@ -13,8 +13,8 @@ test:
 	go test -race
 
 get-deps:
-	go get -t -d -v .
-	cd cmd/stretcher && go get -t -d -v .
+	go get -u github.com/golang/dep
+	dep ensure
 
 packages:
 	cd cmd/stretcher && gox -os="linux darwin" -arch="amd64 arm" -output "../../pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-w -s -X main.version=${GIT_VER} -X main.buildDate=${DATE}"
