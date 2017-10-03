@@ -10,7 +10,7 @@ install: cmd/stretcher/stretcher
 	install cmd/stretcher/stretcher ${GOPATH}/bin
 
 test:
-	go test
+	go test -race
 
 get-deps:
 	go get -t -d -v .
