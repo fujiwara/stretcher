@@ -39,6 +39,8 @@ Usage of stretcher:
         retry count for download src archives
   -retry-wait int
         wait for retry download src archives (sec) (default 3)
+  -rsync-verbose string
+        rsync verbose option (default -v)
   -timeout int
         timeout for download src archives (sec)
   -v    show version
