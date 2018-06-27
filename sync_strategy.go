@@ -16,7 +16,20 @@ type RsyncStrategy struct {
 	*Manifest
 }
 
-var RsyncDefaultOpts = []string{"-av", "--delete"}
+var (
+	RsyncDefaultOpts = []string{"-a", "--delete"}
+	RsyncVerboseOpt  = "-v"
+)
+
+func SetRsyncVerboseOpt(opt string) error {
+	switch opt {
+	case "", "-v", "-vv", "-vvv":
+		RsyncVerboseOpt = opt
+		return nil
+	default:
+		return fmt.Errorf("invalid rsync verbose option: %s", opt)
+	}
+}
 
 func NewSyncStrategy(m *Manifest) (SyncStrategy, error) {
 	switch m.SyncStrategy {
@@ -40,6 +53,7 @@ func (s *RsyncStrategy) Sync(from, to string) error {
 
 	args := []string{}
 	args = append(args, RsyncDefaultOpts...)
+	args = append(args, RsyncVerboseOpt)
 	if m.ExcludeFrom != "" {
 		args = append(args, "--exclude-from", from+m.ExcludeFrom)
 	}

@@ -26,6 +26,7 @@ func main() {
 		timeout      int64
 		retry        int
 		retryWait    int64
+		rsyncVerbose string
 	)
 	flag.BoolVar(&showVersion, "v", false, "show version")
 	flag.BoolVar(&showVersion, "version", false, "show version")
@@ -34,6 +35,7 @@ func main() {
 	flag.Int64Var(&timeout, "timeout", 0, "timeout for download src archives (sec)")
 	flag.IntVar(&retry, "retry", 0, "retry count for download src archives")
 	flag.Int64Var(&retryWait, "retry-wait", 3, "wait for retry download src archives (sec)")
+	flag.StringVar(&rsyncVerbose, "rsync-verbose", "-v", "rsync verbose revel default -v")
 	flag.Parse()
 
 	if showVersion {
@@ -56,6 +58,11 @@ func main() {
 		} else {
 			conf.MaxBandWidth = bw
 		}
+	}
+
+	if err := stretcher.SetRsyncVerboseOpt(rsyncVerbose); err != nil {
+		fmt.Println("Cannot set -rsync-verbose", err)
+		os.Exit(1)
 	}
 
 	log.Println("stretcher version:", version)
