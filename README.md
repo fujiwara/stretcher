@@ -76,6 +76,16 @@ When you specify a S3 URL in manifest, requires a AWS credential setting one of 
 - EC2 IAM role.
   - requires `AWS_DEFAULT_REGION` environment variable.
 
+#### Load GCP credentials
+
+When you specify a GS(Google Cloud Storage) URL in manifest, requires a GCP credential setting one of below.
+
+- ServiceAccount
+  - requires `GOOGLE_APPLICATION_CREDENTIALS=[PATH]` environment variable.
+  - Replace [PATH] with the file path of the JSON file that contains your service account key.
+- DefaultAccount
+  - If the environment variable isn't set, load the default service account that Compute Engine provide, for applications that run on those services.
+
 ### Deployment process
 
 #### Preparing
