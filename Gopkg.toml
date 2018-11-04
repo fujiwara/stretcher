@@ -39,7 +39,7 @@
 
 [[constraint]]
   name = "github.com/tcnksm/go-latest"
-  version = "0.1.1"
+  branch = "master"
 
 [[constraint]]
   branch = "master"
