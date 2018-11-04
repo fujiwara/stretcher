@@ -3,6 +3,7 @@ package stretcher
 import (
 	"bufio"
 	"bytes"
+	"context"
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/AdRoll/goamz/aws"
 	"github.com/AdRoll/goamz/s3"
 )
@@ -107,6 +109,22 @@ func getS3(u *url.URL) (io.ReadCloser, error) {
 	return bucket.GetReader(u.Path)
 }
 
+func getGS(u *url.URL) (io.ReadCloser, error) {
+	var err error
+	trimPath := strings.Trim(u.Path, "/")
+
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	bucket, err := client.Bucket(u.Host).Object(trimPath).NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return bucket, nil
+}
+
 func getFile(u *url.URL) (io.ReadCloser, error) {
 	return os.Open(u.Path)
 }
@@ -134,12 +152,14 @@ func getURL(urlStr string) (io.ReadCloser, error) {
 	switch u.Scheme {
 	case "s3":
 		return getS3(u)
+	case "gs":
+		return getGS(u)
 	case "http", "https":
 		return getHTTP(u)
 	case "file":
 		return getFile(u)
 	default:
-		return nil, fmt.Errorf("manifest URL scheme must be s3 or http(s) or file: %s", urlStr)
+		return nil, fmt.Errorf("manifest URL scheme must be s3, gs, http(s) or file: %s", urlStr)
 	}
 }
 

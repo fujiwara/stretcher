@@ -3,6 +3,9 @@
 *.a
 *.so
 
+# Gopkg Folder
+vendor/
+
 # Folders
 _obj
 _test
