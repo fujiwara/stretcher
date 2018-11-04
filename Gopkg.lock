@@ -100,12 +100,12 @@
   revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
 
 [[projects]]
-  digest = "1:cf5b61b41b490a4ab67416da105a58258f6f410473a35ed04e19fa33c90b7474"
+  branch = "master"
+  digest = "1:64fc4bbf40ffb9e857ac34e806309eff3c707d427ab5d240e375ffb9998a3781"
   name = "github.com/tcnksm/go-latest"
   packages = ["."]
   pruneopts = ""
-  revision = "86500ab1363a867dafe16905b5b85293a0d838eb"
-  version = "0.1.1"
+  revision = "e3007ae9052ed85144087e7392e4c3fbc07962fa"
 
 [[projects]]
   branch = "master"
