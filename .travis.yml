@@ -2,13 +2,11 @@ sudo: false
 language: go
 
 go:
-  - 1.10.3
-  - 1.11.1
+  - 1.11.5
+  - 1.12
   - tip
 
 install:
   - make clean
-  - make get-dep-amd64
-  - make get-deps
   - make test
   - make
