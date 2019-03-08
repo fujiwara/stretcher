@@ -5,13 +5,11 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.11.2
+      - image: circleci/golang:1.12
     working_directory: /go/src/github.com/fujiwara/stretcher
     steps:
       - checkout
       - run: sudo apt install -y rsync
       - run: make clean
-      - run: make get-dep-amd64
-      - run: make get-deps
       - run: make test
       - run: make
