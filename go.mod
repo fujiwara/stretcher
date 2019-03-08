@@ -8,7 +8,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fujiwara/shapeio v0.0.0-20170602072123-c073257dd745
 	github.com/golang/protobuf v1.2.0
-	github.com/google/go-github v0.0.0-20180926004559-f55b50f38167
+	github.com/google/go-github/v18 v18.2.0
 	github.com/google/go-querystring v1.0.0
 	github.com/googleapis/gax-go v2.0.0+incompatible
 	github.com/hashicorp/go-version v1.0.0
