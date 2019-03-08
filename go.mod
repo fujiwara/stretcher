@@ -4,10 +4,11 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.28.0
-	github.com/AdRoll/goamz v0.0.0-20170825154802-2731d20f46f4
+	github.com/aws/aws-sdk-go v1.17.13
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fujiwara/shapeio v0.0.0-20170602072123-c073257dd745
 	github.com/golang/protobuf v1.2.0
+	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v18 v18.2.0
 	github.com/google/go-querystring v1.0.0
 	github.com/googleapis/gax-go v2.0.0+incompatible

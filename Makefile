@@ -4,7 +4,7 @@ export GO111MODULE := on
 
 .PHONY: test local get-deps binary install clean
 
-cmd/stretcher/stretcher: aws.go command.go consul.go manifest.go stretcher.go cmd/stretcher/main.go
+cmd/stretcher/stretcher: *.go cmd/stretcher/main.go
 	cd cmd/stretcher && go build -ldflags "-s -w -X main.version=${GIT_VER} -X main.buildDate=${DATE}" -gcflags="-trimpath=${PWD}"
 
 install: cmd/stretcher/stretcher
