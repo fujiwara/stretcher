@@ -49,6 +49,7 @@ func main() {
 	if region, found := os.LookupEnv("AWS_DEFAULT_REGION"); found && os.Getenv("AWS_REGION") == "" {
 		os.Setenv("AWS_REGION", region)
 	}
+	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 
 	conf := stretcher.Config{
 		InitSleep: stretcher.RandomTime(delay),
