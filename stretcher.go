@@ -18,13 +18,12 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/AdRoll/goamz/aws"
-	"github.com/AdRoll/goamz/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 var (
-	AWSAuth   aws.Auth
-	AWSRegion aws.Region
 	LogBuffer bytes.Buffer
 	Version   string
 )
@@ -95,18 +94,22 @@ func Run(conf Config) error {
 }
 
 func getS3(u *url.URL) (io.ReadCloser, error) {
-	var err error
-	if AWSAuth.AccessKey == "" || AWSRegion.Name == "" {
-		AWSAuth, AWSRegion, err = LoadAWSCredentials("")
-		if err != nil {
-			return nil, err
-		}
-		log.Println("region:", AWSRegion.Name)
-		log.Println("aws_access_key_id:", AWSAuth.AccessKey)
+	sess, err := session.NewSession()
+	if err != nil {
+		return nil, err
 	}
-	client := s3.New(AWSAuth, AWSRegion)
-	bucket := client.Bucket(u.Host)
-	return bucket.GetReader(u.Path)
+	log.Println("region:", *sess.Config.Region)
+
+	svc := s3.New(sess)
+	key := strings.TrimLeft(u.Path, "/")
+	result, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(u.Host),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.Body, nil
 }
 
 func getGS(u *url.URL) (io.ReadCloser, error) {

@@ -68,17 +68,21 @@ $ serf agent -event-handler="user:deploy=/path/to/stretcher >> /path/to/stretche
 
 #### Load AWS credentials
 
-When you specify a S3 URL in manifest, requires a AWS credential setting one of below.
+When you specify a S3 URL in the manifest, requires AWS regions and credentials configuration as the same of aws-sdk-go.
 
-- ~/.aws/config and ~/.aws/credentials (overridden by `AWS_CONFIG_FILE` environment variable.)
-  - `AWS_DEFAULT_PROFILE` is supported to select a profile from multiple credentials in file.
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` environment variable.
-- EC2 IAM role.
-  - requires `AWS_DEFAULT_REGION` environment variable.
+for regions,
+1. `AWS_REGION` or `AWS_DEFAULT_REGION` environment variable.
+
+for credentials,
+1. Environment variables.
+1. Shared credentials file.
+1. If your application is running on an Amazon EC2 instance, IAM role for Amazon EC2.
+
+See also [Configuring the AWS SDK for Go](https://docs.aws.amazon.com/ja_jp/sdk-for-go/v1/developer-guide/configuring-sdk.html).
 
 #### Load GCP credentials
 
-When you specify a GS(Google Cloud Storage) URL in manifest, requires a GCP credential setting one of below.
+When you specify a GS(Google Cloud Storage) URL in the manifest, requires a GCP credential setting one of below.
 
 - ServiceAccount
   - requires `GOOGLE_APPLICATION_CREDENTIALS=[PATH]` environment variable.
