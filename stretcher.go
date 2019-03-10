@@ -26,6 +26,7 @@ import (
 var (
 	LogBuffer bytes.Buffer
 	Version   string
+	s3svc     *s3.S3
 )
 
 type Config struct {
@@ -94,13 +95,10 @@ func Run(conf Config) error {
 }
 
 func getS3(u *url.URL) (io.ReadCloser, error) {
-	sess, err := session.NewSession()
+	svc, err := initS3()
 	if err != nil {
 		return nil, err
 	}
-	log.Println("region:", *sess.Config.Region)
-
-	svc := s3.New(sess)
 	key := strings.TrimLeft(u.Path, "/")
 	result, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(u.Host),
@@ -197,4 +195,16 @@ func parseEvents() (string, error) {
 		line, err := reader.ReadString('\n')
 		return strings.Trim(line, "\n"), err
 	}
+}
+
+func initS3() (*s3.S3, error) {
+	if s3svc != nil {
+		return s3svc, nil
+	}
+	sess, err := session.NewSession()
+	if err != nil {
+		return nil, err
+	}
+	log.Println("region:", *sess.Config.Region)
+	return s3.New(sess), nil
 }
