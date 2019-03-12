@@ -193,6 +193,10 @@ func parseEvents() (string, error) {
 		}
 		// event passed by stdin (raw string)
 		line, err := reader.ReadString('\n')
+		if err == io.EOF {
+			// ignore EOF when the input has not LF.
+			err = nil
+		}
 		return strings.Trim(line, "\n"), err
 	}
 }
