@@ -14,9 +14,12 @@ test:
 	go test -race
 
 packages:
-	cd cmd/stretcher && gox -os="linux darwin" -arch="amd64 arm" -output "../../pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-w -s -X main.version=${GIT_VER} -X main.buildDate=${DATE}"
+	cd cmd/stretcher && gox -os="linux darwin" -arch="amd64 arm64" -output "../../pkg/{{.Dir}}-${GIT_VER}-{{.OS}}-{{.Arch}}" -ldflags "-w -s -X main.version=${GIT_VER} -X main.buildDate=${DATE}"
 	cd pkg && find . -name "*${GIT_VER}*" -type f -exec zip {}.zip {} \;
 
 clean:
 	rm -f cmd/stretcher/stretcher
 	rm -f pkg/*
+
+release:
+	ghr -prerelease -u fujiwara -r stretcher -n "$(GIT_VER)" $(GIT_VER) pkg/
