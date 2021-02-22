@@ -25,7 +25,9 @@ jobs:
           go get github.com/tcnksm/ghr
 
       - name: packages
-        run: PATH=~/go/bin:$PATH make packages
+        run: |
+          go mod download
+          PATH=~/go/bin:$PATH make packages
         env:
           CGO_ENABLED: 0
 
