@@ -21,8 +21,8 @@ jobs:
 
       - name: setup tools
         run: |
-          go install github.com/mitchellh/gox
-          go install github.com/tcnksm/ghr
+          go install github.com/mitchellh/gox@latest
+          go install github.com/tcnksm/ghr@latest
 
       - name: packages
         run: |
