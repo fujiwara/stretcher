@@ -1,6 +1,7 @@
 package stretcher_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -25,11 +26,12 @@ func TestRandomTime(t *testing.T) {
 }
 
 func TestInitSleep(t *testing.T) {
+	ctx := context.Background()
 	sleep := time.Duration(1 * time.Second)
 	start := time.Now()
 	os.Stdin.Close() // expect to return after parseEvents with error
 	stretcher.LogBuffer.Reset()
-	err := stretcher.Run(stretcher.Config{InitSleep: sleep})
+	err := stretcher.Run(ctx, stretcher.Config{InitSleep: sleep})
 	if err == nil {
 		t.Errorf("err should not be nil: %s", err)
 	}

@@ -1,6 +1,7 @@
 package stretcher_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -75,6 +76,7 @@ commands:
 }
 
 func TestDeployManifest(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -107,7 +109,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -130,6 +132,7 @@ commands:
 }
 
 func TestDeployManifestSyncStrategyMv(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	//	os.Remove(testDest)
@@ -164,7 +167,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -195,6 +198,7 @@ commands:
 }
 
 func TestDeployManifestInvalidSyncStrategy(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	defer os.RemoveAll(testDest)
@@ -210,13 +214,14 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err == nil || strings.Index(err.Error(), "invalid strategy") == -1 {
 		t.Error("error must be occured: invalid sync_strategy", err)
 	}
 }
 
 func TestDeployManifestExclude(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -243,7 +248,7 @@ excludes:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -259,6 +264,7 @@ excludes:
 }
 
 func TestDeployManifestExcludeFrom(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -283,7 +289,7 @@ exclude_from: exclude.txt
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,6 +305,7 @@ exclude_from: exclude.txt
 }
 
 func TestDeployManifestDestMode(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -316,7 +323,7 @@ dest_mode: 0711
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -367,6 +374,7 @@ commands:
 }
 
 func TestDeployManifestRetry(t *testing.T) {
+	ctx := context.Background()
 	cwd, _ := os.Getwd()
 	yml := `
 src: file://` + cwd + `/test/test_not_exist_filepath
@@ -377,7 +385,7 @@ dest: ` + cwd + `/test/dest
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{
+	err = m.Deploy(ctx, stretcher.Config{
 		Retry:     3,
 		RetryWait: 3 * time.Second,
 	})
@@ -387,6 +395,7 @@ dest: ` + cwd + `/test/dest
 }
 
 func TestDeployManifestTimeout(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -408,7 +417,7 @@ dest: ` + testDest + `
 	}
 	// download will be finished in about 5 seconds
 	bw := uint64(stat.Size()) / 5
-	err = m.Deploy(stretcher.Config{
+	err = m.Deploy(ctx, stretcher.Config{
 		MaxBandWidth: bw,
 		Timeout:      time.Duration(2 * time.Second),
 	})
@@ -418,6 +427,7 @@ dest: ` + testDest + `
 }
 
 func TestDeployManifestMaxBandwidth(t *testing.T) {
+	ctx := context.Background()
 	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
@@ -440,7 +450,7 @@ dest: ` + testDest + `
 	// expect to download in about 2 second
 	bw := uint64(stat.Size()) / 2
 	start := time.Now()
-	err = m.Deploy(stretcher.Config{
+	err = m.Deploy(ctx, stretcher.Config{
 		MaxBandWidth: bw,
 	})
 	if err != nil {
@@ -448,11 +458,12 @@ dest: ` + testDest + `
 	}
 	elapsed := time.Since(start)
 	if elapsed.Seconds() < 1 || 4 < elapsed.Seconds() {
-		t.Errorf("elapsed expecct abount 2 sec. but %s", elapsed)
+		t.Errorf("elapsed expect about 2 sec. but %s", elapsed)
 	}
 }
 
 func TestDeployCommandsSuccess(t *testing.T) {
+	ctx := context.Background()
 	yml := `
 commands:
   pre:
@@ -466,13 +477,14 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDeployCommandsFail(t *testing.T) {
+	ctx := context.Background()
 	yml := `
 commands:
   pre:
@@ -486,8 +498,27 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(stretcher.Config{})
+	err = m.Deploy(ctx, stretcher.Config{})
 	if err == nil {
 		t.Error(err)
+	}
+}
+
+func TestDeployContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	yml := `
+commands:
+  pre:
+    - 'echo "pre 1"'
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	cancel() // cancel context before deploy
+	err = m.Deploy(ctx, stretcher.Config{})
+	if err == nil {
+		t.Error("context canceled error must be raised")
 	}
 }

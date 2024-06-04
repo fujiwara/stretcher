@@ -2,6 +2,7 @@ package stretcher_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestCommandLines(t *testing.T) {
+	ctx := context.Background()
 	stretcher.LogBuffer.Reset()
 	now := time.Now()
 	ymd := now.Format("20060102")
@@ -20,7 +22,7 @@ func TestCommandLines(t *testing.T) {
 		stretcher.CommandLine("date +%Y%m%d"),
 		stretcher.CommandLine("date +%H%M"),
 	}
-	cmdlines.Invoke()
+	cmdlines.Invoke(ctx)
 	output := stretcher.LogBuffer.String()
 	if strings.Index(output, ymd) == -1 {
 		t.Error("invalid output", output)
@@ -31,6 +33,7 @@ func TestCommandLines(t *testing.T) {
 }
 
 func TestCommandLinesPipe(t *testing.T) {
+	ctx := context.Background()
 	stretcher.LogBuffer.Reset()
 	var buf bytes.Buffer
 	for i := 0; i < 10; i++ {
@@ -45,7 +48,7 @@ func TestCommandLinesPipe(t *testing.T) {
 	}
 	defer os.Remove("test/tmp/cmdoutput")
 
-	err := cmdlines.InvokePipe(&buf)
+	err := cmdlines.InvokePipe(ctx, &buf)
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,11 +63,12 @@ func TestCommandLinesPipe(t *testing.T) {
 }
 
 func TestCommandLinesFail(t *testing.T) {
+	ctx := context.Background()
 	stretcher.LogBuffer.Reset()
 	cmdlines := stretcher.CommandLines{
 		stretcher.CommandLine("echo 'FOO'; echo 'BAR' 2>&1; false"),
 	}
-	err := cmdlines.Invoke()
+	err := cmdlines.Invoke(ctx)
 	if err == nil {
 		t.Error("false command must fail")
 	}
@@ -81,6 +85,7 @@ func TestCommandLinesFail(t *testing.T) {
 }
 
 func TestCommandLinesPipeIgnoreEPIPE(t *testing.T) {
+	ctx := context.Background()
 	stretcher.LogBuffer.Reset()
 	var buf bytes.Buffer
 	for i := 0; i < 1025; i++ {
@@ -90,7 +95,7 @@ func TestCommandLinesPipeIgnoreEPIPE(t *testing.T) {
 		stretcher.CommandLine("echo ok"),
 	}
 
-	err := cmdlines.InvokePipe(&buf)
+	err := cmdlines.InvokePipe(ctx, &buf)
 	if err != nil {
 		t.Error(err)
 	}
