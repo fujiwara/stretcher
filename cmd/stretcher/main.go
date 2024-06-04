@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -46,6 +48,9 @@ func main() {
 		return
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// backward compatibility before v0.10
 	if region, found := os.LookupEnv("AWS_DEFAULT_REGION"); found && os.Getenv("AWS_REGION") == "" {
 		os.Setenv("AWS_REGION", region)
@@ -74,7 +79,7 @@ func main() {
 
 	log.Println("stretcher version:", version)
 	stretcher.Version = version
-	err := stretcher.Run(context.TODO(), conf)
+	err := stretcher.Run(ctx, conf)
 	if err != nil {
 		log.Println(err)
 		if os.Getenv("CONSUL_INDEX") != "" {
