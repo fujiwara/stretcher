@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	mrand "math/rand"
 	"net/http"
@@ -67,13 +66,13 @@ func Run(conf Config) error {
 
 	manifestURL, err := parseEvents()
 	if err != nil {
-		return fmt.Errorf("Could not parse event: %s", err)
+		return fmt.Errorf("Could not parse event: %w", err)
 	}
 
 	log.Println("Loading manifest:", manifestURL)
 	m, err := getManifest(manifestURL)
 	if err != nil {
-		return fmt.Errorf("Load manifest failed: %s", err)
+		return fmt.Errorf("Load manifest failed: %w", err)
 	}
 	log.Printf("Executing manifest %#v", m)
 
@@ -169,7 +168,7 @@ func getManifest(manifestURL string) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, _ := ioutil.ReadAll(rc)
+	data, _ := io.ReadAll(rc)
 	return ParseManifest(data)
 }
 
