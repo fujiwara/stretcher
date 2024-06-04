@@ -3,7 +3,6 @@ package stretcher_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -51,7 +50,7 @@ func TestCommandLinesPipe(t *testing.T) {
 		t.Error(err)
 	}
 
-	wrote, err := ioutil.ReadFile("test/tmp/cmdoutput")
+	wrote, err := os.ReadFile("test/tmp/cmdoutput")
 	if err != nil {
 		t.Error(err)
 	}

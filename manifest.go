@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -68,7 +67,7 @@ func (m *Manifest) Deploy(conf Config) error {
 		return err
 	}
 
-	tmp, err := ioutil.TempFile(os.TempDir(), "stretcher")
+	tmp, err := os.CreateTemp(os.TempDir(), "stretcher")
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (m *Manifest) Deploy(conf Config) error {
 		}
 	}
 
-	dir, err := ioutil.TempDir(os.TempDir(), "stretcher_src")
+	dir, err := os.MkdirTemp(os.TempDir(), "stretcher_src")
 	if err != nil {
 		return err
 	}

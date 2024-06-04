@@ -2,7 +2,6 @@ package stretcher_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -76,7 +75,7 @@ commands:
 }
 
 func TestDeployManifest(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
@@ -85,7 +84,7 @@ func TestDeployManifest(t *testing.T) {
 	defer os.Remove("test/tmp/post.touch")
 
 	// touch pid file (must not be deleted)
-	ioutil.WriteFile(
+	os.WriteFile(
 		testDest+"/test.pid",
 		[]byte(fmt.Sprintf("%d", os.Getpid())),
 		0644,
@@ -131,7 +130,7 @@ commands:
 }
 
 func TestDeployManifestSyncStrategyMv(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	//	os.Remove(testDest)
 	defer os.RemoveAll(testDest)
@@ -139,7 +138,7 @@ func TestDeployManifestSyncStrategyMv(t *testing.T) {
 	defer os.Remove("test/tmp/post.touch")
 
 	// touch pid file (must not be deleted)
-	ioutil.WriteFile(
+	os.WriteFile(
 		testDest+"/test.pid",
 		[]byte(fmt.Sprintf("%d", os.Getpid())),
 		0644,
@@ -196,7 +195,7 @@ commands:
 }
 
 func TestDeployManifestInvalidSyncStrategy(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	defer os.RemoveAll(testDest)
 	cwd, _ := os.Getwd()
@@ -218,14 +217,14 @@ commands:
 }
 
 func TestDeployManifestExclude(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
 	defer os.RemoveAll(testDest)
 
 	// touch pid file (must not be deleted)
-	ioutil.WriteFile(
+	os.WriteFile(
 		testDest+"/test.pid",
 		[]byte(fmt.Sprintf("%d", os.Getpid())),
 		0644,
@@ -260,14 +259,14 @@ excludes:
 }
 
 func TestDeployManifestExcludeFrom(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
 	defer os.RemoveAll(testDest)
 
 	// touch pid file (must not be deleted)
-	ioutil.WriteFile(
+	os.WriteFile(
 		testDest+"/test.pid",
 		[]byte(fmt.Sprintf("%d", os.Getpid())),
 		0644,
@@ -300,7 +299,7 @@ exclude_from: exclude.txt
 }
 
 func TestDeployManifestDestMode(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
@@ -382,13 +381,13 @@ dest: ` + cwd + `/test/dest
 		Retry:     3,
 		RetryWait: 3 * time.Second,
 	})
-	if err == nil || strings.Index(err.Error(), "Get src failed:") == -1 {
+	if err == nil || !strings.Contains(err.Error(), "Get src failed:") {
 		t.Errorf("expect retry got %s", err)
 	}
 }
 
 func TestDeployManifestTimeout(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
@@ -413,13 +412,13 @@ dest: ` + testDest + `
 		MaxBandWidth: bw,
 		Timeout:      time.Duration(2 * time.Second),
 	})
-	if err == nil || strings.Index(err.Error(), "timeout") == -1 {
+	if err == nil || !strings.Contains(err.Error(), "timeout") {
 		t.Errorf("expect timeout got %s", err)
 	}
 }
 
 func TestDeployManifestMaxBandwidth(t *testing.T) {
-	_testDest, _ := ioutil.TempFile(os.TempDir(), "stretcher_dest")
+	_testDest, _ := os.CreateTemp(os.TempDir(), "stretcher_dest")
 	testDest := _testDest.Name()
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
