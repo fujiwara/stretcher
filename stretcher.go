@@ -69,7 +69,7 @@ func Run(ctx context.Context, conf Config) error {
 		}
 	}
 
-	manifestURL, err := parseEvents()
+	manifestURL, err := parseEvents(ctx)
 	if err != nil {
 		return fmt.Errorf("Could not parse event: %w", err)
 	}
@@ -176,7 +176,26 @@ func getManifest(ctx context.Context, manifestURL string) (*Manifest, error) {
 	return ParseManifest(data)
 }
 
-func parseEvents() (string, error) {
+func parseEvents(ctx context.Context) (string, error) {
+	eventCh := make(chan string)
+	var err error
+	go func() {
+		ev, e := parseEventsFromSTDIN()
+		if e != nil {
+			err = e
+		}
+		eventCh <- ev
+	}()
+	select {
+	case <-ctx.Done():
+		os.Stdin.Close()
+		return "", ctx.Err()
+	case ev := <-eventCh:
+		return ev, err
+	}
+}
+
+func parseEventsFromSTDIN() (string, error) {
 	log.Println("Waiting for events from STDIN...")
 	reader := bufio.NewReader(os.Stdin)
 	b, err := reader.Peek(1)
