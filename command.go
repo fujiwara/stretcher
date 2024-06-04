@@ -2,6 +2,7 @@ package stretcher
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -20,9 +21,9 @@ type Commands struct {
 
 type CommandLines []CommandLine
 
-func (cs CommandLines) Invoke() error {
+func (cs CommandLines) Invoke(ctx context.Context) error {
 	for _, c := range cs {
-		err := c.Invoke()
+		err := c.Invoke(ctx)
 		if err != nil {
 			return err
 		}
@@ -30,10 +31,10 @@ func (cs CommandLines) Invoke() error {
 	return nil
 }
 
-func (cs CommandLines) InvokePipe(src *bytes.Buffer) error {
+func (cs CommandLines) InvokePipe(ctx context.Context, src *bytes.Buffer) error {
 	for _, c := range cs {
 		buf := bytes.NewBuffer(src.Bytes())
-		err := c.InvokePipe(buf)
+		err := c.InvokePipe(ctx, buf)
 		if err != nil {
 			return err
 		}
@@ -47,9 +48,9 @@ func (c CommandLine) String() string {
 	return string(c)
 }
 
-func (c CommandLine) Invoke() error {
+func (c CommandLine) Invoke(ctx context.Context) error {
 	log.Println("invoking command:", c.String())
-	out, err := exec.Command("sh", "-c", c.String()).CombinedOutput()
+	out, err := exec.CommandContext(ctx, "sh", "-c", c.String()).CombinedOutput()
 	if len(out) > 0 {
 		log.Println(string(out))
 	}
@@ -59,9 +60,9 @@ func (c CommandLine) Invoke() error {
 	return nil
 }
 
-func (c CommandLine) InvokePipe(src io.Reader) error {
+func (c CommandLine) InvokePipe(ctx context.Context, src io.Reader) error {
 	log.Println("invoking command:", c.String())
-	cmd := exec.Command("sh", "-c", c.String())
+	cmd := exec.CommandContext(ctx, "sh", "-c", c.String())
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err

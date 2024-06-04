@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -73,7 +74,7 @@ func main() {
 
 	log.Println("stretcher version:", version)
 	stretcher.Version = version
-	err := stretcher.Run(conf)
+	err := stretcher.Run(context.TODO(), conf)
 	if err != nil {
 		log.Println(err)
 		if os.Getenv("CONSUL_INDEX") != "" {

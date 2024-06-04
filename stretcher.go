@@ -17,15 +17,15 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var (
 	LogBuffer bytes.Buffer
 	Version   string
-	s3svc     *s3.S3
+	s3svc     *s3.Client
 )
 
 type Config struct {
@@ -51,17 +51,22 @@ func RandomTime(delay float64) time.Duration {
 	if err := binary.Read(crand.Reader, binary.LittleEndian, &s); err != nil {
 		s = time.Now().UnixNano()
 	}
-	mrand.Seed(s)
 	n := mrand.Int63n(int64(delay * Nanoseconds))
 	return time.Duration(n)
 }
 
-func Run(conf Config) error {
+func Run(ctx context.Context, conf Config) error {
 	var err error
 	log.Println("Starting up stretcher agent", Version)
 	if conf.InitSleep > 0 {
 		log.Printf("Sleeping %s", conf.InitSleep)
-		time.Sleep(conf.InitSleep)
+		tm := time.NewTimer(conf.InitSleep)
+		select {
+		case <-ctx.Done():
+			// return immediately if context is canceled
+			return ctx.Err()
+		case <-tm.C:
+		}
 	}
 
 	manifestURL, err := parseEvents()
@@ -70,22 +75,22 @@ func Run(conf Config) error {
 	}
 
 	log.Println("Loading manifest:", manifestURL)
-	m, err := getManifest(manifestURL)
+	m, err := getManifest(ctx, manifestURL)
 	if err != nil {
 		return fmt.Errorf("Load manifest failed: %w", err)
 	}
 	log.Printf("Executing manifest %#v", m)
 
-	err = m.Deploy(conf)
+	err = m.Deploy(ctx, conf)
 	if err != nil {
 		log.Println("Deploy manifest failed:", err)
-		if ferr := m.Commands.Failure.InvokePipe(&LogBuffer); ferr != nil {
+		if ferr := m.Commands.Failure.InvokePipe(ctx, &LogBuffer); ferr != nil {
 			log.Println(ferr)
 		}
 		return fmt.Errorf("Deploy manifest failed: %s", err)
 	}
 	log.Println("Deploy manifest succeeded.")
-	err = m.Commands.Success.InvokePipe(&LogBuffer)
+	err = m.Commands.Success.InvokePipe(ctx, &LogBuffer)
 	if err != nil {
 		log.Println(err)
 	}
@@ -93,13 +98,13 @@ func Run(conf Config) error {
 	return nil
 }
 
-func getS3(u *url.URL) (io.ReadCloser, error) {
+func getS3(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
 	svc, err := initS3()
 	if err != nil {
 		return nil, err
 	}
 	key := strings.TrimLeft(u.Path, "/")
-	result, err := svc.GetObject(&s3.GetObjectInput{
+	result, err := svc.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(u.Host),
 		Key:    aws.String(key),
 	})
@@ -109,11 +114,10 @@ func getS3(u *url.URL) (io.ReadCloser, error) {
 	return result.Body, nil
 }
 
-func getGS(u *url.URL) (io.ReadCloser, error) {
+func getGS(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
 	var err error
 	trimPath := strings.Trim(u.Path, "/")
 
-	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -125,12 +129,12 @@ func getGS(u *url.URL) (io.ReadCloser, error) {
 	return bucket, nil
 }
 
-func getFile(u *url.URL) (io.ReadCloser, error) {
+func getFile(_ context.Context, u *url.URL) (io.ReadCloser, error) {
 	return os.Open(u.Path)
 }
 
-func getHTTP(u *url.URL) (io.ReadCloser, error) {
-	req, err := http.NewRequest("GET", u.String(), nil)
+func getHTTP(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +147,7 @@ func getHTTP(u *url.URL) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-func getURL(urlStr string) (io.ReadCloser, error) {
+func getURL(ctx context.Context, urlStr string) (io.ReadCloser, error) {
 	log.Println("Loading URL", urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
@@ -151,20 +155,20 @@ func getURL(urlStr string) (io.ReadCloser, error) {
 	}
 	switch u.Scheme {
 	case "s3":
-		return getS3(u)
+		return getS3(ctx, u)
 	case "gs":
-		return getGS(u)
+		return getGS(ctx, u)
 	case "http", "https":
-		return getHTTP(u)
+		return getHTTP(ctx, u)
 	case "file":
-		return getFile(u)
+		return getFile(ctx, u)
 	default:
 		return nil, fmt.Errorf("manifest URL scheme must be s3, gs, http(s) or file: %s", urlStr)
 	}
 }
 
-func getManifest(manifestURL string) (*Manifest, error) {
-	rc, err := getURL(manifestURL)
+func getManifest(ctx context.Context, manifestURL string) (*Manifest, error) {
+	rc, err := getURL(ctx, manifestURL)
 	if err != nil {
 		return nil, err
 	}
@@ -200,14 +204,14 @@ func parseEvents() (string, error) {
 	}
 }
 
-func initS3() (*s3.S3, error) {
+func initS3() (*s3.Client, error) {
 	if s3svc != nil {
 		return s3svc, nil
 	}
-	sess, err := session.NewSession()
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	log.Println("region:", *sess.Config.Region)
-	return s3.New(sess), nil
+	log.Println("region:", cfg.Region)
+	return s3.NewFromConfig(cfg), nil
 }

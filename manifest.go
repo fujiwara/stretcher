@@ -1,6 +1,7 @@
 package stretcher
 
 import (
+	"context"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -47,19 +48,19 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 	}
 }
 
-func (m *Manifest) runCommands() error {
-	if err := m.Commands.Pre.Invoke(); err != nil {
+func (m *Manifest) runCommands(ctx context.Context) error {
+	if err := m.Commands.Pre.Invoke(ctx); err != nil {
 		return err
 	}
-	if err := m.Commands.Post.Invoke(); err != nil {
+	if err := m.Commands.Post.Invoke(ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *Manifest) Deploy(conf Config) error {
+func (m *Manifest) Deploy(ctx context.Context, conf Config) error {
 	if m.Src == "" {
-		return m.runCommands()
+		return m.runCommands(ctx)
 	}
 
 	strategy, err := NewSyncStrategy(m)
@@ -76,10 +77,12 @@ func (m *Manifest) Deploy(conf Config) error {
 
 	if conf.Timeout != 0 {
 		log.Printf("Set timeout %s", conf.Timeout)
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
 		timer := time.NewTimer(conf.Timeout)
 		done := make(chan error)
 		go func() {
-			done <- m.fetchSrc(conf, tmp)
+			done <- m.fetchSrc(ctx, conf, tmp)
 		}()
 		select {
 		case <-timer.C:
@@ -90,7 +93,7 @@ func (m *Manifest) Deploy(conf Config) error {
 			}
 		}
 	} else {
-		err := m.fetchSrc(conf, tmp)
+		err := m.fetchSrc(ctx, conf, tmp)
 		if err != nil {
 			return err
 		}
@@ -102,7 +105,7 @@ func (m *Manifest) Deploy(conf Config) error {
 	}
 	defer os.RemoveAll(dir)
 
-	err = m.Commands.Pre.Invoke()
+	err = m.Commands.Pre.Invoke(ctx)
 	if err != nil {
 		return err
 	}
@@ -143,22 +146,22 @@ func (m *Manifest) Deploy(conf Config) error {
 		return err
 	}
 
-	err = m.Commands.Post.Invoke()
+	err = m.Commands.Post.Invoke(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
+func (m *Manifest) fetchSrc(ctx context.Context, conf Config, tmp *os.File) error {
 	begin := time.Now()
-	src, err := getURL(m.Src)
+	src, err := getURL(ctx, m.Src)
 	if err != nil {
 		for i := 0; i < conf.Retry; i++ {
 			log.Printf("Get src failed: %s", err)
 			log.Printf("Try again. Waiting: %s", conf.RetryWait)
 			time.Sleep(conf.RetryWait)
-			src, err = getURL(m.Src)
+			src, err = getURL(ctx, m.Src)
 			if err == nil {
 				break
 			}
@@ -175,7 +178,7 @@ func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
 		lsrc.SetRateLimit(float64(conf.MaxBandWidth))
 	}
 
-	written, sum, err := m.copyAndCalcHash(tmp, lsrc)
+	written, sum, err := m.copyAndCalcHash(ctx, tmp, lsrc)
 	if err != nil {
 		return err
 	}
@@ -194,7 +197,7 @@ func (m *Manifest) fetchSrc(conf Config, tmp *os.File) error {
 	return nil
 }
 
-func (m *Manifest) copyAndCalcHash(dst io.Writer, src io.Reader) (int64, string, error) {
+func (m *Manifest) copyAndCalcHash(ctx context.Context, dst io.Writer, src io.Reader) (int64, string, error) {
 	h, err := m.newHash()
 	if err != nil {
 		return 0, "", err
