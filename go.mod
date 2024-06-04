@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/go-version v1.0.0 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	go.opencensus.io v0.17.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
 	google.golang.org/api v0.0.0-20180929000454-5da02d31af7d // indirect
 	google.golang.org/appengine v1.2.0 // indirect
