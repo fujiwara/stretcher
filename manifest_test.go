@@ -41,6 +41,37 @@ commands:
 	}
 }
 
+func TestParseManifestWithEnv(t *testing.T) {
+	t.Setenv("SRC", "s3://example.com/path/to/archive.tar.gz")
+	yml := `
+src: '{{ must_env "SRC" }}'
+checksum: e0840daaa97cd2cf2175f9e5d133ffb3324a2b93
+dest: '{{ env "DEST" "/home/stretcher/app" }}'
+commands:
+  pre:
+    - echo 'staring deploy'
+    - echo 'xxx'
+  post:
+    - echo 'deploy done'
+`
+	m, err := stretcher.ParseManifest([]byte(yml))
+	if err != nil {
+		t.Error(err)
+	}
+	if m.Src != "s3://example.com/path/to/archive.tar.gz" {
+		t.Errorf("invalid src: %s", m.Src)
+	}
+	if m.CheckSum != "e0840daaa97cd2cf2175f9e5d133ffb3324a2b93" {
+		t.Errorf("invalid checksum")
+	}
+	if len(m.Commands.Pre) != 2 {
+		t.Errorf("invalid commands.pre")
+	}
+	if len(m.Commands.Post) != 1 {
+		t.Errorf("invalid commands.post")
+	}
+}
+
 func TestParseManifestSyncStrategy(t *testing.T) {
 	yml := `
 src: s3://example.com/path/to/archive.tar.gz

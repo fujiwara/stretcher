@@ -214,7 +214,7 @@ func (m *Manifest) copyAndCalcHash(_ context.Context, dst io.Writer, src io.Read
 
 func ParseManifest(b []byte) (*Manifest, error) {
 	m := &Manifest{}
-	if err := goconfig.LoadBytes(m, b); err != nil {
+	if err := goconfig.LoadWithEnvBytes(m, b); err != nil {
 		return nil, err
 	}
 	if m.Src != "" && m.Dest == "" {
