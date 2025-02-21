@@ -9,7 +9,7 @@ builds:
     binary: stretcher
     ldflags:
       - -s -w
-      - -X main.Version=v{{.Version}}
+      - -X main.Version={{.Version}}
     goos:
       - linux
       - darwin
@@ -20,7 +20,7 @@ builds:
 checksum:
   name_template: "checksums.txt"
 archives:
-  - name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 snapshot:
   version_template: "{{ .Tag }}-next"
 changelog:

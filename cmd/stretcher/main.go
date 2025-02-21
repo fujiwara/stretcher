@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -16,8 +15,7 @@ import (
 )
 
 var (
-	Version   string
-	buildDate string
+	Version = "current"
 )
 
 func main() {
@@ -42,7 +40,6 @@ func main() {
 
 	if showVersion {
 		fmt.Println("version:", Version)
-		fmt.Println("build:", buildDate)
 		return
 	}
 
@@ -75,8 +72,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Println("stretcher version:", version)
-	stretcher.Version = version
+	log.Println("stretcher version:", Version)
+	stretcher.Version = Version
 	err := stretcher.Run(ctx, conf)
 	if err != nil {
 		log.Println(err)
@@ -87,10 +84,4 @@ func main() {
 			os.Exit(1)
 		}
 	}
-}
-
-func fixVersionStr(v string) string {
-	v = strings.TrimPrefix(v, "v")
-	vs := strings.Split(v, "-")
-	return vs[0]
 }
