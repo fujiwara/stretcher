@@ -155,13 +155,13 @@ func (m *Manifest) Deploy(ctx context.Context, conf *Config) error {
 
 func (m *Manifest) fetchSrc(ctx context.Context, conf *Config, tmp *os.File) error {
 	begin := time.Now()
-	src, err := getURL(ctx, m.Src)
+	src, err := getURL(ctx, m.Src, conf)
 	if err != nil {
 		for i := 0; i < conf.Retry; i++ {
 			log.Printf("Get src failed: %s", err)
 			log.Printf("Try again. Waiting: %s", conf.RetryWait)
 			time.Sleep(conf.RetryWait)
-			src, err = getURL(ctx, m.Src)
+			src, err = getURL(ctx, m.Src, conf)
 			if err == nil {
 				break
 			}
