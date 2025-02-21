@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/fujiwara/stretcher"
 )
 
@@ -140,7 +141,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -198,7 +199,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -245,7 +246,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err == nil || strings.Index(err.Error(), "invalid strategy") == -1 {
 		t.Error("error must be occured: invalid sync_strategy", err)
 	}
@@ -279,7 +280,7 @@ excludes:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -320,7 +321,7 @@ exclude_from: exclude.txt
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -354,7 +355,7 @@ dest_mode: 0711
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -416,10 +417,14 @@ dest: ` + cwd + `/testdata/dest
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{
+	conf := &stretcher.Config{
 		Retry:     3,
 		RetryWait: 3 * time.Second,
-	})
+	}
+	if err := conf.Validate(); err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(ctx, conf)
 	if err == nil || !strings.Contains(err.Error(), "src failed:") {
 		t.Errorf("expect retry got %s", err)
 	}
@@ -448,10 +453,14 @@ dest: ` + testDest + `
 	}
 	// download will be finished in about 5 seconds
 	bw := uint64(stat.Size()) / 5
-	err = m.Deploy(ctx, stretcher.Config{
-		MaxBandWidth: bw,
+	conf := &stretcher.Config{
+		MaxBandWidth: humanize.Bytes(bw),
 		Timeout:      time.Duration(2 * time.Second),
-	})
+	}
+	if err := conf.Validate(); err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(ctx, conf)
 	if err == nil || !strings.Contains(err.Error(), "timeout") {
 		t.Errorf("expect timeout got %s", err)
 	}
@@ -481,9 +490,13 @@ dest: ` + testDest + `
 	// expect to download in about 2 second
 	bw := uint64(stat.Size()) / 2
 	start := time.Now()
-	err = m.Deploy(ctx, stretcher.Config{
-		MaxBandWidth: bw,
-	})
+	conf := &stretcher.Config{
+		MaxBandWidth: humanize.Bytes(bw),
+	}
+	if err := conf.Validate(); err != nil {
+		t.Error(err)
+	}
+	err = m.Deploy(ctx, conf)
 	if err != nil {
 		t.Error(err)
 	}
@@ -508,7 +521,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -529,7 +542,7 @@ commands:
 	if err != nil {
 		t.Error(err)
 	}
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err == nil {
 		t.Error(err)
 	}
@@ -548,7 +561,7 @@ commands:
 		t.Error(err)
 	}
 	cancel() // cancel context before deploy
-	err = m.Deploy(ctx, stretcher.Config{})
+	err = m.Deploy(ctx, &stretcher.Config{})
 	if err == nil {
 		t.Error("context canceled error must be raised")
 	}

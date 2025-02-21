@@ -58,7 +58,7 @@ func (m *Manifest) runCommands(ctx context.Context) error {
 	return nil
 }
 
-func (m *Manifest) Deploy(ctx context.Context, conf Config) error {
+func (m *Manifest) Deploy(ctx context.Context, conf *Config) error {
 	if m.Src == "" {
 		return m.runCommands(ctx)
 	}
@@ -153,7 +153,7 @@ func (m *Manifest) Deploy(ctx context.Context, conf Config) error {
 	return nil
 }
 
-func (m *Manifest) fetchSrc(ctx context.Context, conf Config, tmp *os.File) error {
+func (m *Manifest) fetchSrc(ctx context.Context, conf *Config, tmp *os.File) error {
 	begin := time.Now()
 	src, err := getURL(ctx, m.Src)
 	if err != nil {
@@ -173,9 +173,10 @@ func (m *Manifest) fetchSrc(ctx context.Context, conf Config, tmp *os.File) erro
 	defer src.Close()
 
 	lsrc := shapeio.NewReader(src)
-	if conf.MaxBandWidth != 0 {
-		log.Printf("Set max bandwidth %s/sec", humanize.Bytes(uint64(conf.MaxBandWidth)))
-		lsrc.SetRateLimit(float64(conf.MaxBandWidth))
+	if conf.MaxBandWidth != "" {
+
+		log.Printf("Set max bandwidth %s/sec", humanize.Bytes(conf.maxbw))
+		lsrc.SetRateLimit(float64(conf.maxbw))
 	}
 
 	written, sum, err := m.copyAndCalcHash(ctx, tmp, lsrc)

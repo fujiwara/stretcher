@@ -41,23 +41,17 @@ dest: '{{ env "DEST" "/home/stretcher/app" }}'
 ### stretcher agent
 
 ```
-$ stretcher -h
-Usage of stretcher:
-  -max-bandwidth string
-        max bandwidth for download src archives (Bytes/sec)
-  -random-delay float
-        sleep [0,random-delay) sec on start
-  -retry int
-        retry count for download src archives
-  -retry-wait int
-        wait for retry download src archives (sec) (default 3)
-  -rsync-verbose string
-        rsync verbose option (default -v)
-  -timeout int
-        timeout for download src archives (sec)
-  -v    show version
-  -version
-        show version
+Usage: stretcher [flags]
+
+Flags:
+  -h, --help                     Show context-sensitive help.
+      --max-band-width=STRING    max bandwidth for download src archives (/sec)
+      --timeout=DURATION         timeout for download src archives
+      --random-delay=DURATION    sleep [0,random-delay) sec on start
+      --retry=INT                retry count for download src archives
+      --retry-wait=DURATION      wait for retry download src archives
+      --rsync-verbose="-v"       rsync verbose option (default: -v)
+  -v, --version                  Show version and exit.
 ```
 
 #### with Consul
