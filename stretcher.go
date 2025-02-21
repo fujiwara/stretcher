@@ -36,6 +36,7 @@ type Config struct {
 	RetryWait    time.Duration    `help:"wait for retry download src archives"`
 	RsyncVerbose string           `help:"rsync verbose option (default: -v)" default:"-v"`
 	Version      kong.VersionFlag `short:"v" help:"Show version and exit."`
+	HTTP         HTTPOptions      `embed prefix:"http-"`
 
 	maxbw     uint64
 	initSleep time.Duration
@@ -86,7 +87,7 @@ func Run(ctx context.Context, conf *Config) error {
 	}
 
 	log.Println("Loading manifest:", manifestURL)
-	m, err := getManifest(ctx, manifestURL)
+	m, err := getManifest(ctx, manifestURL, conf)
 	if err != nil {
 		return fmt.Errorf("load manifest failed: %w", err)
 	}
@@ -144,12 +145,15 @@ func getFile(_ context.Context, u *url.URL) (io.ReadCloser, error) {
 	return os.Open(u.Path)
 }
 
-func getHTTP(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
+func getHTTP(ctx context.Context, u *url.URL, opt *HTTPOptions) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("User-Agent", "Stretcher/"+Version)
+	for k, v := range opt.Headers {
+		req.Header.Add(k, v)
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -158,7 +162,7 @@ func getHTTP(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-func getURL(ctx context.Context, urlStr string) (io.ReadCloser, error) {
+func getURL(ctx context.Context, urlStr string, conf *Config) (io.ReadCloser, error) {
 	log.Println("Loading URL", urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
@@ -170,7 +174,7 @@ func getURL(ctx context.Context, urlStr string) (io.ReadCloser, error) {
 	case "gs":
 		return getGS(ctx, u)
 	case "http", "https":
-		return getHTTP(ctx, u)
+		return getHTTP(ctx, u, &conf.HTTP)
 	case "file":
 		return getFile(ctx, u)
 	default:
@@ -178,8 +182,8 @@ func getURL(ctx context.Context, urlStr string) (io.ReadCloser, error) {
 	}
 }
 
-func getManifest(ctx context.Context, manifestURL string) (*Manifest, error) {
-	rc, err := getURL(ctx, manifestURL)
+func getManifest(ctx context.Context, manifestURL string, conf *Config) (*Manifest, error) {
+	rc, err := getURL(ctx, manifestURL, conf)
 	if err != nil {
 		return nil, err
 	}
