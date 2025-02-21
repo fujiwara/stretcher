@@ -82,8 +82,8 @@ func TestDeployManifest(t *testing.T) {
 	os.Remove(testDest)
 	os.Mkdir(testDest, 0755)
 	defer os.RemoveAll(testDest)
-	defer os.Remove("test/tmp/pre.touch")
-	defer os.Remove("test/tmp/post.touch")
+	defer os.Remove("testdata/tmp/pre.touch")
+	defer os.Remove("testdata/tmp/post.touch")
 
 	// touch pid file (must not be deleted)
 	os.WriteFile(
@@ -94,16 +94,16 @@ func TestDeployManifest(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 commands:
   pre:
     - pwd
-    - echo "pre" > test/tmp/pre.touch
+    - echo "pre" > testdata/tmp/pre.touch
   post:
     - pwd
-    - echo "post" > test/tmp/post.touch
+    - echo "post" > testdata/tmp/post.touch
 `
 	m, err := stretcher.ParseManifest([]byte(yml))
 	if err != nil {
@@ -119,10 +119,10 @@ commands:
 	if _, err := os.Open(testDest + "/bar"); err != nil {
 		t.Error(err)
 	}
-	if _, err := os.Open("test/tmp/pre.touch"); err != nil {
+	if _, err := os.Open("testdata/tmp/pre.touch"); err != nil {
 		t.Error(err)
 	}
-	if _, err := os.Open("test/tmp/post.touch"); err != nil {
+	if _, err := os.Open("testdata/tmp/post.touch"); err != nil {
 		t.Error(err)
 	}
 	_, err = os.Open(testDest + "/test.pid")
@@ -137,8 +137,8 @@ func TestDeployManifestSyncStrategyMv(t *testing.T) {
 	testDest := _testDest.Name()
 	//	os.Remove(testDest)
 	defer os.RemoveAll(testDest)
-	defer os.Remove("test/tmp/pre.touch")
-	defer os.Remove("test/tmp/post.touch")
+	defer os.Remove("testdata/tmp/pre.touch")
+	defer os.Remove("testdata/tmp/post.touch")
 
 	// touch pid file (must not be deleted)
 	os.WriteFile(
@@ -149,7 +149,7 @@ func TestDeployManifestSyncStrategyMv(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 sync_strategy: mv
@@ -158,10 +158,10 @@ commands:
   pre:
     - rm -fr ` + testDest + `
     - pwd
-    - echo "pre" > test/tmp/pre.touch
+    - echo "pre" > testdata/tmp/pre.touch
   post:
     - pwd
-    - echo "post" > test/tmp/post.touch
+    - echo "post" > testdata/tmp/post.touch
 `
 	m, err := stretcher.ParseManifest([]byte(yml))
 	if err != nil {
@@ -185,10 +185,10 @@ commands:
 	if _, err := os.Open(testDest + "/bar"); err != nil {
 		t.Error(err)
 	}
-	if _, err := os.Open("test/tmp/pre.touch"); err != nil {
+	if _, err := os.Open("testdata/tmp/pre.touch"); err != nil {
 		t.Error(err)
 	}
-	if _, err := os.Open("test/tmp/post.touch"); err != nil {
+	if _, err := os.Open("testdata/tmp/post.touch"); err != nil {
 		t.Error(err)
 	}
 	_, err = os.Open(testDest + "/test.pid")
@@ -204,7 +204,7 @@ func TestDeployManifestInvalidSyncStrategy(t *testing.T) {
 	defer os.RemoveAll(testDest)
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 sync_strategy: dummy
@@ -237,7 +237,7 @@ func TestDeployManifestExclude(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 excludes:
@@ -280,7 +280,7 @@ func TestDeployManifestExcludeFrom(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 exclude_from: exclude.txt
@@ -314,7 +314,7 @@ func TestDeployManifestDestMode(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test_no_top_dir.tar
+src: file://` + cwd + `/testdata/test_no_top_dir.tar
 checksum: da5ec3a7dca4b0492a0ba0104f7cc7ad2ae2eafc
 dest: ` + testDest + `
 dest_mode: 0711
@@ -377,9 +377,9 @@ func TestDeployManifestRetry(t *testing.T) {
 	ctx := context.Background()
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test_not_exist_filepath
+src: file://` + cwd + `/testdata/test_not_exist_filepath
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
-dest: ` + cwd + `/test/dest
+dest: ` + cwd + `/testdata/dest
 `
 	m, err := stretcher.ParseManifest([]byte(yml))
 	if err != nil {
@@ -403,7 +403,7 @@ func TestDeployManifestTimeout(t *testing.T) {
 	defer os.RemoveAll(testDest)
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 `
@@ -411,7 +411,7 @@ dest: ` + testDest + `
 	if err != nil {
 		t.Error(err)
 	}
-	stat, err := os.Stat(cwd + "/test/test.tar")
+	stat, err := os.Stat(cwd + "/testdata/test.tar")
 	if err != nil {
 		t.Error(err)
 	}
@@ -435,7 +435,7 @@ func TestDeployManifestMaxBandwidth(t *testing.T) {
 	defer os.RemoveAll(testDest)
 	cwd, _ := os.Getwd()
 	yml := `
-src: file://` + cwd + `/test/test.tar
+src: file://` + cwd + `/testdata/test.tar
 checksum: 7b57db167410e46720b1d636ee6cb6c147efac3a
 dest: ` + testDest + `
 `
@@ -443,7 +443,7 @@ dest: ` + testDest + `
 	if err != nil {
 		t.Error(err)
 	}
-	stat, err := os.Stat(cwd + "/test/test.tar")
+	stat, err := os.Stat(cwd + "/testdata/test.tar")
 	if err != nil {
 		t.Error(err)
 	}
