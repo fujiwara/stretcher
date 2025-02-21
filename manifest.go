@@ -17,7 +17,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/fujiwara/shapeio"
-	"gopkg.in/yaml.v2"
+	goconfig "github.com/kayac/go-config"
 )
 
 var DefaultDestMode = os.FileMode(0755)
@@ -44,7 +44,7 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 	case 128:
 		return sha512.New(), nil
 	default:
-		return nil, fmt.Errorf("checksum must be md5, sha1, sha256, sha512 hex string.")
+		return nil, fmt.Errorf("checksum must be md5, sha1, sha256, sha512 hex string")
 	}
 }
 
@@ -167,7 +167,7 @@ func (m *Manifest) fetchSrc(ctx context.Context, conf Config, tmp *os.File) erro
 			}
 		}
 		if err != nil {
-			return fmt.Errorf("Get src failed: %s", err)
+			return fmt.Errorf("get src failed: %s", err)
 		}
 	}
 	defer src.Close()
@@ -190,14 +190,14 @@ func (m *Manifest) fetchSrc(ctx context.Context, conf Config, tmp *os.File) erro
 		humanize.Bytes(uint64(float64(written)/elapsed.Seconds())),
 	)
 	if len(m.CheckSum) > 0 && sum != strings.ToLower(m.CheckSum) {
-		return fmt.Errorf("Checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
+		return fmt.Errorf("checksum mismatch. expected:%s got:%s", m.CheckSum, sum)
 	} else {
 		log.Printf("Checksum ok: %s", sum)
 	}
 	return nil
 }
 
-func (m *Manifest) copyAndCalcHash(ctx context.Context, dst io.Writer, src io.Reader) (int64, string, error) {
+func (m *Manifest) copyAndCalcHash(_ context.Context, dst io.Writer, src io.Reader) (int64, string, error) {
 	h, err := m.newHash()
 	if err != nil {
 		return 0, "", err
@@ -212,13 +212,13 @@ func (m *Manifest) copyAndCalcHash(ctx context.Context, dst io.Writer, src io.Re
 	return written, s, err
 }
 
-func ParseManifest(data []byte) (*Manifest, error) {
+func ParseManifest(b []byte) (*Manifest, error) {
 	m := &Manifest{}
-	if err := yaml.Unmarshal(data, m); err != nil {
+	if err := goconfig.LoadWithEnvBytes(m, b); err != nil {
 		return nil, err
 	}
 	if m.Src != "" && m.Dest == "" {
-		return nil, fmt.Errorf("Dest is required")
+		return nil, fmt.Errorf("dest is required")
 	}
 	if m.DestMode == nil {
 		mode := DefaultDestMode

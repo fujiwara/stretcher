@@ -42,18 +42,18 @@ func TestCommandLinesPipe(t *testing.T) {
 	toWrite := buf.Bytes()
 
 	cmdlines := stretcher.CommandLines{
-		stretcher.CommandLine("cat > test/tmp/cmdoutput"),
+		stretcher.CommandLine("cat > testdata/tmp/cmdoutput"),
 		stretcher.CommandLine("cat"),
 		stretcher.CommandLine("echo ok"),
 	}
-	defer os.Remove("test/tmp/cmdoutput")
+	defer os.Remove("testdata/tmp/cmdoutput")
 
 	err := cmdlines.InvokePipe(ctx, &buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	wrote, err := os.ReadFile("test/tmp/cmdoutput")
+	wrote, err := os.ReadFile("testdata/tmp/cmdoutput")
 	if err != nil {
 		t.Error(err)
 	}
