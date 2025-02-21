@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	crand "crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
-	mrand "math/rand"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/dustin/go-humanize"
 )
 
 var (
@@ -29,38 +28,48 @@ var (
 )
 
 type Config struct {
-	MaxBandWidth uint64
-	Timeout      time.Duration
-	InitSleep    time.Duration
-	Retry        int
-	RetryWait    time.Duration
+	MaxBandWidth string        `help:"max bandwidth for download src archives (/sec)"`
+	Timeout      time.Duration `help:"timeout for download src archives"`
+	RandomDelay  time.Duration `help:"sleep [0,random-delay) sec on start"`
+	Retry        int           `help:"retry count for download src archives"`
+	RetryWait    time.Duration `help:"wait for retry download src archives"`
+	RsyncVerbose string        `help:"rsync verbose option (default: -v)" default:"-v"`
+
+	maxbw     uint64
+	initSleep time.Duration
 }
 
-const Nanoseconds = 1000 * 1000 * 1000
+func (c *Config) Validate() error {
+	log.Printf("validate config: %#v", c)
+	if c.MaxBandWidth != "" {
+		bw, err := humanize.ParseBytes(c.MaxBandWidth)
+		if err != nil {
+			return fmt.Errorf("invalid max bandwidth: %s", err)
+		}
+		c.maxbw = bw
+	}
+	if c.RandomDelay > 0 {
+		c.initSleep = time.Duration(rand.Int64N(c.RandomDelay.Nanoseconds()))
+	} else {
+		c.initSleep = 0
+	}
+	return nil
+}
 
 func init() {
 	log.SetOutput(io.MultiWriter(os.Stderr, &LogBuffer))
 }
 
-func RandomTime(delay float64) time.Duration {
-	if delay <= 0 {
-		return time.Duration(0)
-	}
-	// http://stackoverflow.com/questions/6181260/generating-random-numbers-in-go
-	var s int64
-	if err := binary.Read(crand.Reader, binary.LittleEndian, &s); err != nil {
-		s = time.Now().UnixNano()
-	}
-	n := mrand.Int63n(int64(delay * Nanoseconds))
-	return time.Duration(n)
-}
-
-func Run(ctx context.Context, conf Config) error {
+func Run(ctx context.Context, conf *Config) error {
 	var err error
+	if err := conf.Validate(); err != nil {
+		return err
+	}
+
 	log.Println("Starting up stretcher agent", Version)
-	if conf.InitSleep > 0 {
-		log.Printf("Sleeping %s", conf.InitSleep)
-		tm := time.NewTimer(conf.InitSleep)
+	if d := conf.initSleep; d > 0 {
+		log.Printf("Sleeping %s", d)
+		tm := time.NewTimer(d)
 		select {
 		case <-ctx.Done():
 			// return immediately if context is canceled
@@ -71,13 +80,13 @@ func Run(ctx context.Context, conf Config) error {
 
 	manifestURL, err := parseEvents(ctx)
 	if err != nil {
-		return fmt.Errorf("Could not parse event: %w", err)
+		return fmt.Errorf("could not parse event: %w", err)
 	}
 
 	log.Println("Loading manifest:", manifestURL)
 	m, err := getManifest(ctx, manifestURL)
 	if err != nil {
-		return fmt.Errorf("Load manifest failed: %w", err)
+		return fmt.Errorf("load manifest failed: %w", err)
 	}
 	log.Printf("Executing manifest %#v", m)
 
