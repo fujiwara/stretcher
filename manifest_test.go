@@ -389,7 +389,7 @@ dest: ` + cwd + `/test/dest
 		Retry:     3,
 		RetryWait: 3 * time.Second,
 	})
-	if err == nil || !strings.Contains(err.Error(), "Get src failed:") {
+	if err == nil || !strings.Contains(err.Error(), "src failed:") {
 		t.Errorf("expect retry got %s", err)
 	}
 }
