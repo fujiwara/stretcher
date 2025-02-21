@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/alecthomas/kong"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -28,12 +29,13 @@ var (
 )
 
 type Config struct {
-	MaxBandWidth string        `help:"max bandwidth for download src archives (/sec)"`
-	Timeout      time.Duration `help:"timeout for download src archives"`
-	RandomDelay  time.Duration `help:"sleep [0,random-delay) sec on start"`
-	Retry        int           `help:"retry count for download src archives"`
-	RetryWait    time.Duration `help:"wait for retry download src archives"`
-	RsyncVerbose string        `help:"rsync verbose option (default: -v)" default:"-v"`
+	MaxBandWidth string           `help:"max bandwidth for download src archives (/sec)"`
+	Timeout      time.Duration    `help:"timeout for download src archives"`
+	RandomDelay  time.Duration    `help:"sleep [0,random-delay) sec on start"`
+	Retry        int              `help:"retry count for download src archives"`
+	RetryWait    time.Duration    `help:"wait for retry download src archives"`
+	RsyncVerbose string           `help:"rsync verbose option (default: -v)" default:"-v"`
+	Version      kong.VersionFlag `short:"v" help:"Show version and exit."`
 
 	maxbw     uint64
 	initSleep time.Duration

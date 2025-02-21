@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -19,11 +20,10 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	log.Println("stretcher version:", Version)
 	stretcher.Version = Version
 
 	conf := &stretcher.Config{}
-	kong.Parse(conf)
+	kong.Parse(conf, kong.Vars{"version": fmt.Sprintf("stretcher %s", Version)})
 	err := stretcher.Run(ctx, conf)
 	if err != nil {
 		log.Println(err)
