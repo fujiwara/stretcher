@@ -24,6 +24,18 @@ excludes:
   - "*.socket"
 ```
 
+### Lookup environment variables
+
+You can use environment variables in the manifest.
+
+```yml
+src: '{{ must_env "SRC" }}'
+dest: '{{ env "DEST" "/home/stretcher/app" }}'
+```
+
+- `must_env`: Lookup environment variables. If the variable is not set, return an error.
+- `env`: Lookup environment variables. If the variable is not set, return a default value.
+
 ## Run
 
 ### stretcher agent
