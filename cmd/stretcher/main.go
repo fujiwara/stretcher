@@ -13,11 +13,10 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/fujiwara/stretcher"
-	"github.com/tcnksm/go-latest"
 )
 
 var (
-	version   string
+	Version   string
 	buildDate string
 )
 
@@ -42,9 +41,8 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Println("version:", version)
+		fmt.Println("version:", Version)
 		fmt.Println("build:", buildDate)
-		checkLatest(version)
 		return
 	}
 
@@ -95,21 +93,4 @@ func fixVersionStr(v string) string {
 	v = strings.TrimPrefix(v, "v")
 	vs := strings.Split(v, "-")
 	return vs[0]
-}
-
-func checkLatest(version string) {
-	version = fixVersionStr(version)
-	githubTag := &latest.GithubTag{
-		Owner:             "fujiwara",
-		Repository:        "stretcher",
-		FixVersionStrFunc: fixVersionStr,
-	}
-	res, err := latest.Check(githubTag, version)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if res.Outdated {
-		fmt.Printf("%s is not latest, you should upgrade to %s\n", version, res.Current)
-	}
 }
