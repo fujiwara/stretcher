@@ -19,6 +19,9 @@ commands:
   failure:
     - echo 'deploy failed!!'
     - cat >> /path/to/failure.log
+  env:
+    FOO: 'bar' # environment variables for invoked commands
+
 excludes:
   - "*.pid"
   - "*.socket"
