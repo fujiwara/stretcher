@@ -49,10 +49,11 @@ func (m *Manifest) newHash() (hash.Hash, error) {
 }
 
 func (m *Manifest) runCommands(ctx context.Context) error {
-	if err := m.Commands.Pre.Invoke(ctx); err != nil {
+	env := m.Commands.Env
+	if err := m.Commands.Pre.Invoke(ctx, env); err != nil {
 		return err
 	}
-	if err := m.Commands.Post.Invoke(ctx); err != nil {
+	if err := m.Commands.Post.Invoke(ctx, env); err != nil {
 		return err
 	}
 	return nil
@@ -105,7 +106,7 @@ func (m *Manifest) Deploy(ctx context.Context, conf *Config) error {
 	}
 	defer os.RemoveAll(dir)
 
-	err = m.Commands.Pre.Invoke(ctx)
+	err = m.Commands.Pre.Invoke(ctx, m.Commands.Env)
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func (m *Manifest) Deploy(ctx context.Context, conf *Config) error {
 		return err
 	}
 
-	err = m.Commands.Post.Invoke(ctx)
+	err = m.Commands.Post.Invoke(ctx, m.Commands.Env)
 	if err != nil {
 		return err
 	}

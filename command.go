@@ -13,17 +13,18 @@ import (
 )
 
 type Commands struct {
-	Pre     CommandLines `yaml:"pre"`
-	Post    CommandLines `yaml:"post"`
-	Success CommandLines `yaml:"success"`
-	Failure CommandLines `yaml:"failure"`
+	Pre     CommandLines      `yaml:"pre"`
+	Post    CommandLines      `yaml:"post"`
+	Success CommandLines      `yaml:"success"`
+	Failure CommandLines      `yaml:"failure"`
+	Env     map[string]string `yaml:"env"`
 }
 
 type CommandLines []CommandLine
 
-func (cs CommandLines) Invoke(ctx context.Context) error {
+func (cs CommandLines) Invoke(ctx context.Context, env map[string]string) error {
 	for _, c := range cs {
-		err := c.Invoke(ctx)
+		err := c.Invoke(ctx, env)
 		if err != nil {
 			return err
 		}
@@ -31,10 +32,10 @@ func (cs CommandLines) Invoke(ctx context.Context) error {
 	return nil
 }
 
-func (cs CommandLines) InvokePipe(ctx context.Context, src *bytes.Buffer) error {
+func (cs CommandLines) InvokePipe(ctx context.Context, src *bytes.Buffer, env map[string]string) error {
 	for _, c := range cs {
 		buf := bytes.NewBuffer(src.Bytes())
-		err := c.InvokePipe(ctx, buf)
+		err := c.InvokePipe(ctx, buf, env)
 		if err != nil {
 			return err
 		}
@@ -48,9 +49,20 @@ func (c CommandLine) String() string {
 	return string(c)
 }
 
-func (c CommandLine) Invoke(ctx context.Context) error {
-	log.Println("invoking command:", c.String())
-	out, err := exec.CommandContext(ctx, "sh", "-c", c.String()).CombinedOutput()
+func (c CommandLine) Invoke(ctx context.Context, env map[string]string) error {
+	log.Println("invoking command:", c.String(), "with", len(env), "env vars")
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", c.String())
+	cmd.Env = os.Environ()
+	if len(env) > 0 {
+		var envs []string
+		for k, v := range env {
+			envs = append(envs, k+"="+v)
+		}
+		cmd.Env = append(cmd.Env, envs...)
+	}
+
+	out, err := cmd.CombinedOutput()
 	if len(out) > 0 {
 		log.Println(string(out))
 	}
@@ -60,9 +72,17 @@ func (c CommandLine) Invoke(ctx context.Context) error {
 	return nil
 }
 
-func (c CommandLine) InvokePipe(ctx context.Context, src io.Reader) error {
-	log.Println("invoking command:", c.String())
+func (c CommandLine) InvokePipe(ctx context.Context, src io.Reader, env map[string]string) error {
+	log.Println("invoking command:", c.String(), "with", len(env), "env vars")
 	cmd := exec.CommandContext(ctx, "sh", "-c", c.String())
+	cmd.Env = os.Environ()
+	if len(env) > 0 {
+		var envs []string
+		for k, v := range env {
+			envs = append(envs, k+"="+v)
+		}
+		cmd.Env = append(cmd.Env, envs...)
+	}
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err

@@ -93,15 +93,16 @@ func Run(ctx context.Context, conf *Config) error {
 	log.Printf("Executing manifest %#v", m)
 
 	err = m.Deploy(ctx, conf)
+	env := m.Commands.Env
 	if err != nil {
 		log.Println("Deploy manifest failed:", err)
-		if ferr := m.Commands.Failure.InvokePipe(ctx, &LogBuffer); ferr != nil {
+		if ferr := m.Commands.Failure.InvokePipe(ctx, &LogBuffer, env); ferr != nil {
 			log.Println(ferr)
 		}
 		return fmt.Errorf("Deploy manifest failed: %s", err)
 	}
 	log.Println("Deploy manifest succeeded.")
-	err = m.Commands.Success.InvokePipe(ctx, &LogBuffer)
+	err = m.Commands.Success.InvokePipe(ctx, &LogBuffer, env)
 	if err != nil {
 		log.Println(err)
 	}
